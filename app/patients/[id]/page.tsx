@@ -119,24 +119,15 @@ export default async function PatientDetailPage({
                 <Link
                   key={note.id}
                   href={`/patients/${id}/notes/${note.id}`}
-                  className={`block rounded-lg shadow p-4 hover:shadow-md transition-all ${
-                    isToday
-                      ? 'bg-blue-900/30 border-2 border-blue-500/50 ring-2 ring-blue-500/20'
-                      : 'bg-slate-800'
+                  className={`block bg-slate-800 rounded-lg shadow p-4 hover:shadow-md transition-all ${
+                    isToday ? 'border-2 border-blue-500' : 'border-2 border-transparent'
                   }`}
                 >
                   {/* Data */}
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <p className={`font-semibold ${isToday ? 'text-blue-300' : 'text-slate-100'}`}>
-                        {format(new Date(note.data), "dd 'de' MMMM", { locale: ptBR })}
-                      </p>
-                      {isToday && (
-                        <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
-                          Hoje
-                        </span>
-                      )}
-                    </div>
+                    <p className="font-semibold text-slate-100">
+                      {format(new Date(note.data), "dd 'de' MMMM", { locale: ptBR })}
+                    </p>
                     <p className="text-sm text-slate-500">
                       {format(new Date(note.data), "EEEE", { locale: ptBR })}
                     </p>
