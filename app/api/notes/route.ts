@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { parseLocalDate } from "@/lib/dateUtils";
 
 // POST - Criar nova anotação
 export async function POST(request: Request) {
@@ -15,9 +16,11 @@ export async function POST(request: Request) {
     }
 
     // Verificar se já existe uma anotação para este dia
-    const noteDate = new Date(data);
-    const startOfDay = new Date(noteDate.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(noteDate.setHours(23, 59, 59, 999));
+    const noteDate = parseLocalDate(data);
+    const startOfDay = new Date(noteDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(noteDate);
+    endOfDay.setHours(23, 59, 59, 999);
 
     const existingNote = await prisma.dailyNote.findFirst({
       where: {
@@ -39,7 +42,7 @@ export async function POST(request: Request) {
     const note = await prisma.dailyNote.create({
       data: {
         patientId,
-        data: new Date(data),
+        data: noteDate,
         horaDormiu: horaDormiu || null,
         horaAcordou: horaAcordou || null,
         humor: humor || null,

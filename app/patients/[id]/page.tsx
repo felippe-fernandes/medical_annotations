@@ -41,12 +41,8 @@ export default async function PatientDetailPage({
     notFound();
   }
 
-  // Check if there's already a note for today
+  // Check if there's already a note for today (for visual highlighting)
   const today = startOfDay(new Date());
-  const todayNote = patient.dailyNotes.find(note => {
-    const noteDate = startOfDay(new Date(note.data));
-    return noteDate.getTime() === today.getTime();
-  });
 
   return (
     <div className="min-h-screen bg-slate-900">
@@ -82,17 +78,7 @@ export default async function PatientDetailPage({
 
         {/* Botões de Ação */}
         <div className="space-y-3 mb-6">
-          {todayNote ? (
-            <Link
-              href={`/patients/${id}/notes/${todayNote.id}`}
-              className="flex items-center justify-center gap-2 w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              <Calendar size={20} />
-              <span>Continuar Anotação de Hoje</span>
-            </Link>
-          ) : (
-            <StartDailyNote patientId={id} />
-          )}
+          <StartDailyNote patientId={id} />
 
           {patient.dailyNotes.length > 0 && (
             <ExportPDFButton
@@ -125,21 +111,36 @@ export default async function PatientDetailPage({
           </div>
         ) : (
           <div className="space-y-4">
-            {patient.dailyNotes.map((note) => (
-              <Link
-                key={note.id}
-                href={`/patients/${id}/notes/${note.id}`}
-                className="block bg-slate-800 rounded-lg shadow p-4 hover:shadow-md transition-shadow"
-              >
-                {/* Data */}
-                <div className="flex items-center justify-between mb-3">
-                  <p className="font-semibold text-slate-100">
-                    {format(new Date(note.data), "dd 'de' MMMM", { locale: ptBR })}
-                  </p>
-                  <p className="text-sm text-slate-500">
-                    {format(new Date(note.data), "EEEE", { locale: ptBR })}
-                  </p>
-                </div>
+            {patient.dailyNotes.map((note) => {
+              const noteDate = startOfDay(new Date(note.data));
+              const isToday = noteDate.getTime() === today.getTime();
+
+              return (
+                <Link
+                  key={note.id}
+                  href={`/patients/${id}/notes/${note.id}`}
+                  className={`block rounded-lg shadow p-4 hover:shadow-md transition-all ${
+                    isToday
+                      ? 'bg-blue-900/30 border-2 border-blue-500/50 ring-2 ring-blue-500/20'
+                      : 'bg-slate-800'
+                  }`}
+                >
+                  {/* Data */}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <p className={`font-semibold ${isToday ? 'text-blue-300' : 'text-slate-100'}`}>
+                        {format(new Date(note.data), "dd 'de' MMMM", { locale: ptBR })}
+                      </p>
+                      {isToday && (
+                        <span className="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
+                          Hoje
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-slate-500">
+                      {format(new Date(note.data), "EEEE", { locale: ptBR })}
+                    </p>
+                  </div>
 
                 {/* Info Grid */}
                 <div className="grid grid-cols-3 gap-3 mb-3">
@@ -189,16 +190,17 @@ export default async function PatientDetailPage({
                   </div>
                 )}
 
-                {/* Registros Horários */}
-                {note.hourlyNotes.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-slate-700">
-                    <p className="text-xs text-slate-500">
-                      {note.hourlyNotes.length} {note.hourlyNotes.length === 1 ? 'registro horário' : 'registros horários'}
-                    </p>
-                  </div>
-                )}
-              </Link>
-            ))}
+                  {/* Registros Horários */}
+                  {note.hourlyNotes.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-slate-700">
+                      <p className="text-xs text-slate-500">
+                        {note.hourlyNotes.length} {note.hourlyNotes.length === 1 ? 'registro horário' : 'registros horários'}
+                      </p>
+                    </div>
+                  )}
+                </Link>
+              );
+            })}
           </div>
         )}
       </div>

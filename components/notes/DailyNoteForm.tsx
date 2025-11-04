@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { X, Plus, Trash2, Clock } from "lucide-react";
+import { formatLocalDate } from "@/lib/dateUtils";
 
 const dailyNoteSchema = z.object({
   data: z.string().min(1, "Data é obrigatória"),
@@ -81,8 +82,8 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
     resolver: zodResolver(dailyNoteSchema),
     defaultValues: {
       data: initialData?.data
-        ? new Date(initialData.data).toISOString().split('T')[0]
-        : "",
+        ? formatLocalDate(new Date(initialData.data))
+        : formatLocalDate(new Date()),
       horaDormiu: initialData?.horaDormiu || "",
       horaAcordou: initialData?.horaAcordou || "",
       humor: initialData?.humor?.toString() || "",
@@ -241,13 +242,14 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
       {/* Data */}
       <div>
         <label htmlFor="data" className="block text-sm font-medium text-slate-300 mb-1">
-          Data *
+          Data da Anotação *
         </label>
         <input
           {...register("data")}
           type="date"
           id="data"
-          className="w-full px-3 py-2 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          required
+          className="w-full px-3 py-2 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-slate-700 text-slate-100"
         />
         {errors.data && (
           <p className="mt-1 text-sm text-red-400">{errors.data.message}</p>

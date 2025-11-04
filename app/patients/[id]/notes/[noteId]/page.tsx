@@ -36,6 +36,10 @@ export default async function NoteDetailPage({
     notFound();
   }
 
+  // Verificar se a anotação está vazia
+  const isEmpty = !note.horaDormiu && !note.horaAcordou && !note.humor &&
+                  !note.detalhesExtras && note.tags.length === 0 && note.hourlyNotes.length === 0;
+
   return (
     <div className="min-h-screen bg-slate-900">
       <div className="max-w-2xl mx-auto p-4">
@@ -72,8 +76,26 @@ export default async function NoteDetailPage({
           />
         </div>
 
-        {/* Card Principal */}
-        <div className="bg-slate-800 rounded-lg shadow p-6 mb-6">
+        {/* Mensagem se estiver vazio */}
+        {isEmpty ? (
+          <div className="bg-slate-800 rounded-lg shadow p-8 text-center mb-6">
+            <Edit size={48} className="mx-auto text-slate-600 mb-3" />
+            <p className="text-slate-300 mb-2 text-lg">Anotação sem informações</p>
+            <p className="text-slate-500 text-sm mb-4">
+              Clique no ícone de edição acima para adicionar informações sobre este dia
+            </p>
+            <Link
+              href={`/patients/${id}/notes/${noteId}/edit`}
+              className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Edit size={20} />
+              Adicionar Informações
+            </Link>
+          </div>
+        ) : (
+          <>
+            {/* Card Principal */}
+            <div className="bg-slate-800 rounded-lg shadow p-6 mb-6">
           {/* Tags */}
           {note.tags && note.tags.length > 0 && (
             <div className="mb-6 pb-6 border-b border-slate-700">
@@ -142,30 +164,32 @@ export default async function NoteDetailPage({
           )}
         </div>
 
-        {/* Registros Horários */}
-        {note.hourlyNotes.length > 0 && (
-          <div className="bg-slate-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
-                <Clock size={20} />
-                Registros por Hora
-              </h2>
-            </div>
-
-            <div className="space-y-3">
-              {note.hourlyNotes.map((hourlyNote) => (
-                <div
-                  key={hourlyNote.id}
-                  className="p-4 bg-slate-900 rounded-lg"
-                >
-                  <p className="text-sm font-medium text-blue-400 mb-1">
-                    {hourlyNote.hora}
-                  </p>
-                  <p className="text-slate-300">{hourlyNote.descricao}</p>
+            {/* Registros Horários */}
+            {note.hourlyNotes.length > 0 && (
+              <div className="bg-slate-800 rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                    <Clock size={20} />
+                    Registros por Hora
+                  </h2>
                 </div>
-              ))}
-            </div>
-          </div>
+
+                <div className="space-y-3">
+                  {note.hourlyNotes.map((hourlyNote) => (
+                    <div
+                      key={hourlyNote.id}
+                      className="p-4 bg-slate-900 rounded-lg"
+                    >
+                      <p className="text-sm font-medium text-blue-400 mb-1">
+                        {hourlyNote.hora}
+                      </p>
+                      <p className="text-slate-300">{hourlyNote.descricao}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
