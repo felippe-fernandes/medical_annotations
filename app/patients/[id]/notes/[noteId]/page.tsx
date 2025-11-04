@@ -24,7 +24,12 @@ export default async function NoteDetailPage({
       patient: true,
       hourlyNotes: {
         orderBy: { hora: 'asc' }
-      }
+      },
+      tags: {
+        include: {
+          tag: true,
+        },
+      },
     },
   });
 
@@ -75,12 +80,13 @@ export default async function NoteDetailPage({
             <div className="mb-6 pb-6 border-b border-slate-700">
               <p className="text-sm text-slate-500 mb-3">Tags</p>
               <div className="flex flex-wrap gap-2">
-                {note.tags.map((tag) => (
+                {note.tags.map((dailyNoteTag) => (
                   <span
-                    key={tag}
-                    className="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded-full text-sm"
+                    key={dailyNoteTag.tag.id}
+                    style={{ backgroundColor: dailyNoteTag.tag.cor }}
+                    className="inline-flex items-center px-3 py-1 text-white rounded-full text-sm"
                   >
-                    {tag}
+                    {dailyNoteTag.tag.nome}
                   </span>
                 ))}
               </div>

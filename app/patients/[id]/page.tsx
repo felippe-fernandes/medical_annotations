@@ -26,7 +26,12 @@ export default async function PatientDetailPage({
         include: {
           hourlyNotes: {
             orderBy: { hora: 'asc' }
-          }
+          },
+          tags: {
+            include: {
+              tag: true,
+            },
+          },
         }
       },
     },
@@ -100,7 +105,7 @@ export default async function PatientDetailPage({
                   horaAcordou: note.horaAcordou,
                   humor: note.humor,
                   detalhesExtras: note.detalhesExtras,
-                  tags: note.tags || [],
+                  tags: note.tags.map((t) => t.tag.nome),
                   hourlyNotes: note.hourlyNotes.map((hn) => ({
                     hora: hn.hora,
                     descricao: hn.descricao,
@@ -167,6 +172,21 @@ export default async function PatientDetailPage({
                   <p className="text-sm text-slate-400 line-clamp-2 mb-2">
                     {note.detalhesExtras}
                   </p>
+                )}
+
+                {/* Tags */}
+                {note.tags && note.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {note.tags.map((dailyNoteTag) => (
+                      <span
+                        key={dailyNoteTag.tag.id}
+                        style={{ backgroundColor: dailyNoteTag.tag.cor }}
+                        className="inline-block px-2 py-0.5 text-white rounded-full text-xs"
+                      >
+                        {dailyNoteTag.tag.nome}
+                      </span>
+                    ))}
+                  </div>
                 )}
 
                 {/* Registros Horários */}

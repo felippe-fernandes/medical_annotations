@@ -57,6 +57,11 @@ export default async function DashboardPage() {
     orderBy: { data: 'desc' },
     include: {
       patient: true,
+      tags: {
+        include: {
+          tag: true,
+        },
+      },
     },
   });
 
@@ -191,6 +196,19 @@ export default async function DashboardPage() {
                           <span className="text-2xl">{humorEmojis[note.humor - 1]}</span>
                         )}
                       </div>
+                      {note.tags && note.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-2">
+                          {note.tags.map((dailyNoteTag) => (
+                            <span
+                              key={dailyNoteTag.tag.id}
+                              style={{ backgroundColor: dailyNoteTag.tag.cor }}
+                              className="inline-block px-2 py-0.5 text-white rounded-full text-xs"
+                            >
+                              {dailyNoteTag.tag.nome}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                       {note.detalhesExtras && (
                         <p className="text-sm text-slate-400 line-clamp-2">
                           {note.detalhesExtras}

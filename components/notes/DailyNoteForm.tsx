@@ -1,11 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { X } from "lucide-react";
+import { X, Plus } from "lucide-react";
 
 const dailyNoteSchema = z.object({
   data: z.string(),
@@ -18,6 +18,12 @@ const dailyNoteSchema = z.object({
 
 type DailyNoteFormData = z.infer<typeof dailyNoteSchema>;
 
+interface Tag {
+  id: string;
+  nome: string;
+  cor: string;
+}
+
 interface DailyNoteFormProps {
   patientId: string;
   initialData?: {
@@ -27,7 +33,7 @@ interface DailyNoteFormProps {
     horaAcordou: string | null;
     humor: number | null;
     detalhesExtras: string | null;
-    tags: string[];
+    tags: { tag: Tag }[];
   };
 }
 
@@ -39,25 +45,18 @@ const humorOptions = [
   { value: "5", emoji: "😄", label: "Muito Bom" },
 ];
 
-const availableTags = [
-  "consulta",
-  "doente",
-  "exame",
-  "internação",
-  "cirurgia",
-  "emergência",
-];
-
 export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedHumor, setSelectedHumor] = useState<string>(
     initialData?.humor?.toString() || ""
   );
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    initialData?.tags || []
+  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
+    initialData?.tags?.map(t => t.tag.id) || []
   );
-  const [customTag, setCustomTag] = useState("");
+  const [newTagName, setNewTagName] = useState("");
+  const [isCreatingTag, setIsCreatingTag] = useState(false);
 
   const {
     register,
@@ -77,21 +76,58 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
     },
   });
 
-  const toggleTag = (tag: string) => {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+  // Carregar tags disponíveis
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await fetch("/api/tags");
+        if (response.ok) {
+          const tags = await response.json();
+          setAvailableTags(tags);
+        }
+      } catch (error) {
+        console.error("Error fetching tags:", error);
+      }
+    };
+    fetchTags();
+  }, []);
+
+  const toggleTag = (tagId: string) => {
+    setSelectedTagIds((prev) =>
+      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
     );
   };
 
-  const addCustomTag = () => {
-    if (customTag.trim() && !selectedTags.includes(customTag.trim())) {
-      setSelectedTags((prev) => [...prev, customTag.trim()]);
-      setCustomTag("");
+  const createNewTag = async () => {
+    if (!newTagName.trim()) return;
+
+    setIsCreatingTag(true);
+    try {
+      const response = await fetch("/api/tags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nome: newTagName.trim() }),
+      });
+
+      if (response.ok) {
+        const newTag = await response.json();
+        setAvailableTags((prev) => [...prev, newTag]);
+        setSelectedTagIds((prev) => [...prev, newTag.id]);
+        setNewTagName("");
+      } else {
+        const error = await response.json();
+        alert(error.error || "Erro ao criar tag");
+      }
+    } catch (error) {
+      console.error("Error creating tag:", error);
+      alert("Erro ao criar tag");
+    } finally {
+      setIsCreatingTag(false);
     }
   };
 
-  const removeTag = (tag: string) => {
-    setSelectedTags((prev) => prev.filter((t) => t !== tag));
+  const removeTag = (tagId: string) => {
+    setSelectedTagIds((prev) => prev.filter((id) => id !== tagId));
   };
 
   const onSubmit = async (data: DailyNoteFormData) => {
@@ -113,7 +149,7 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
           horaAcordou: data.horaAcordou || null,
           humor: data.humor ? parseInt(data.humor) : null,
           detalhesExtras: data.detalhesExtras || null,
-          tags: selectedTags,
+          tagIds: selectedTagIds,
         }),
       });
 
@@ -205,69 +241,81 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
       {/* Tags */}
       <div>
         <label className="block text-sm font-medium text-slate-300 mb-2">
-          Tags (ex: consulta, doente, exame)
+          Tags (marcar eventos importantes)
         </label>
 
-        {/* Tags comuns */}
+        {/* Tags disponíveis */}
         <div className="flex flex-wrap gap-2 mb-3">
           {availableTags.map((tag) => (
             <button
-              key={tag}
+              key={tag.id}
               type="button"
-              onClick={() => toggleTag(tag)}
-              className={`px-3 py-1 rounded-full text-sm transition-all ${
-                selectedTags.includes(tag)
-                  ? "bg-blue-600 text-white"
+              onClick={() => toggleTag(tag.id)}
+              style={{
+                backgroundColor: selectedTagIds.includes(tag.id) ? tag.cor : undefined,
+                borderColor: tag.cor,
+              }}
+              className={`px-3 py-1 rounded-full text-sm transition-all border-2 ${
+                selectedTagIds.includes(tag.id)
+                  ? "text-white"
                   : "bg-slate-700 text-slate-300 hover:bg-slate-600"
               }`}
             >
-              {tag}
+              {tag.nome}
             </button>
           ))}
         </div>
 
         {/* Tags selecionadas */}
-        {selectedTags.length > 0 && (
+        {selectedTagIds.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3 p-3 bg-slate-900 rounded-lg">
-            {selectedTags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-full text-sm"
-              >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => removeTag(tag)}
-                  className="hover:bg-blue-700 rounded-full p-0.5"
+            <p className="w-full text-xs text-slate-400 mb-1">Tags selecionadas:</p>
+            {selectedTagIds.map((tagId) => {
+              const tag = availableTags.find(t => t.id === tagId);
+              if (!tag) return null;
+              return (
+                <span
+                  key={tagId}
+                  style={{ backgroundColor: tag.cor }}
+                  className="inline-flex items-center gap-1 px-3 py-1 text-white rounded-full text-sm"
                 >
-                  <X size={14} />
-                </button>
-              </span>
-            ))}
+                  {tag.nome}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(tagId)}
+                    className="hover:opacity-80 rounded-full p-0.5"
+                  >
+                    <X size={14} />
+                  </button>
+                </span>
+              );
+            })}
           </div>
         )}
 
-        {/* Adicionar tag customizada */}
+        {/* Criar nova tag */}
         <div className="flex gap-2">
           <input
             type="text"
-            value={customTag}
-            onChange={(e) => setCustomTag(e.target.value)}
+            value={newTagName}
+            onChange={(e) => setNewTagName(e.target.value)}
             onKeyPress={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
-                addCustomTag();
+                createNewTag();
               }
             }}
-            placeholder="Tag personalizada..."
+            placeholder="Criar nova tag..."
             className="flex-1 px-3 py-2 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
           <button
             type="button"
-            onClick={addCustomTag}
-            className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition-colors text-sm"
+            onClick={createNewTag}
+            disabled={isCreatingTag || !newTagName.trim()}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors text-sm flex items-center gap-1"
           >
-            Adicionar
+            <Plus size={16} />
+            {isCreatingTag ? "..." : "Criar"}
           </button>
         </div>
       </div>

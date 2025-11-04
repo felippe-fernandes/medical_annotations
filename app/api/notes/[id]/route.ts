@@ -14,7 +14,12 @@ export async function GET(
         patient: true,
         hourlyNotes: {
           orderBy: { hora: 'asc' }
-        }
+        },
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
       },
     });
 
@@ -43,17 +48,36 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { data, horaDormiu, horaAcordou, humor, detalhesExtras, tags } = body;
+    const { data, horaDormiu, horaAcordou, humor, detalhesExtras, tagIds } = body;
+
+    // Se tagIds foi fornecido, atualizamos as tags
+    const updateData: any = {
+      data: data ? new Date(data) : undefined,
+      horaDormiu: horaDormiu !== undefined ? horaDormiu : undefined,
+      horaAcordou: horaAcordou !== undefined ? horaAcordou : undefined,
+      humor: humor !== undefined ? humor : undefined,
+      detalhesExtras: detalhesExtras !== undefined ? detalhesExtras : undefined,
+    };
+
+    if (tagIds !== undefined) {
+      // Remove todas as tags existentes e adiciona as novas
+      updateData.tags = {
+        deleteMany: {},
+        create: tagIds.map((tagId: string) => ({
+          tag: { connect: { id: tagId } },
+        })),
+      };
+    }
 
     const note = await prisma.dailyNote.update({
       where: { id },
-      data: {
-        data: data ? new Date(data) : undefined,
-        horaDormiu: horaDormiu || null,
-        horaAcordou: horaAcordou || null,
-        humor: humor || null,
-        detalhesExtras: detalhesExtras || null,
-        tags: tags !== undefined ? tags : undefined,
+      data: updateData,
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
       },
     });
 

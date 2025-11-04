@@ -16,6 +16,11 @@ export default async function EditNotePage({
     where: { id: noteId },
     include: {
       patient: true,
+      tags: {
+        include: {
+          tag: true,
+        },
+      },
     },
   });
 
@@ -56,6 +61,7 @@ export default async function EditNotePage({
               horaAcordou: note.horaAcordou,
               humor: note.humor,
               detalhesExtras: note.detalhesExtras,
+              tags: note.tags,
             }}
           />
         </div>

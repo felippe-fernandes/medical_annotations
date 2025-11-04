@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { patientId, data, horaDormiu, horaAcordou, humor, detalhesExtras, tags } = body;
+    const { patientId, data, horaDormiu, horaAcordou, humor, detalhesExtras, tagIds } = body;
 
     if (!patientId || !data) {
       return NextResponse.json(
@@ -22,7 +22,18 @@ export async function POST(request: Request) {
         horaAcordou: horaAcordou || null,
         humor: humor || null,
         detalhesExtras: detalhesExtras || null,
-        tags: tags || [],
+        tags: tagIds && tagIds.length > 0 ? {
+          create: tagIds.map((tagId: string) => ({
+            tag: { connect: { id: tagId } },
+          })),
+        } : undefined,
+      },
+      include: {
+        tags: {
+          include: {
+            tag: true,
+          },
+        },
       },
     });
 
