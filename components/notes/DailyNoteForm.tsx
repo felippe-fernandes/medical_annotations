@@ -5,10 +5,10 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { X, Plus } from "lucide-react";
+import { X, Plus, Trash2, Clock } from "lucide-react";
 
 const dailyNoteSchema = z.object({
-  data: z.string(),
+  data: z.string().min(1, "Data é obrigatória"),
   horaDormiu: z.string().optional(),
   horaAcordou: z.string().optional(),
   humor: z.string().optional(),
@@ -24,6 +24,12 @@ interface Tag {
   cor: string;
 }
 
+interface HourlyNote {
+  id?: string;
+  hora: string;
+  descricao: string;
+}
+
 interface DailyNoteFormProps {
   patientId: string;
   initialData?: {
@@ -34,6 +40,7 @@ interface DailyNoteFormProps {
     humor: number | null;
     detalhesExtras: string | null;
     tags: { tag: Tag }[];
+    hourlyNotes?: HourlyNote[];
   };
 }
 
@@ -58,6 +65,13 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
   const [newTagName, setNewTagName] = useState("");
   const [isCreatingTag, setIsCreatingTag] = useState(false);
 
+  // Anotações horárias
+  const [hourlyNotes, setHourlyNotes] = useState<HourlyNote[]>(
+    initialData?.hourlyNotes || []
+  );
+  const [newHourlyHora, setNewHourlyHora] = useState("");
+  const [newHourlyDesc, setNewHourlyDesc] = useState("");
+
   const {
     register,
     handleSubmit,
@@ -68,7 +82,7 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
     defaultValues: {
       data: initialData?.data
         ? new Date(initialData.data).toISOString().split('T')[0]
-        : new Date().toISOString().split('T')[0],
+        : "",
       horaDormiu: initialData?.horaDormiu || "",
       horaAcordou: initialData?.horaAcordou || "",
       humor: initialData?.humor?.toString() || "",
@@ -130,6 +144,44 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
     setSelectedTagIds((prev) => prev.filter((id) => id !== tagId));
   };
 
+  // Funções para anotações horárias
+  const addHourlyNote = () => {
+    if (!newHourlyHora || !newHourlyDesc.trim()) {
+      alert("Preencha hora e descrição");
+      return;
+    }
+
+    setHourlyNotes((prev) => [
+      ...prev,
+      { hora: newHourlyHora, descricao: newHourlyDesc.trim() },
+    ]);
+    setNewHourlyHora("");
+    setNewHourlyDesc("");
+  };
+
+  const removeHourlyNote = (index: number) => {
+    setHourlyNotes((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const deleteHourlyNoteFromServer = async (id: string) => {
+    if (!confirm("Deseja realmente deletar este registro?")) return;
+
+    try {
+      const response = await fetch(`/api/notes/${initialData!.id}/hourly/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        setHourlyNotes((prev) => prev.filter((note) => note.id !== id));
+      } else {
+        alert("Erro ao deletar registro");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Erro ao deletar registro");
+    }
+  };
+
   const onSubmit = async (data: DailyNoteFormData) => {
     setIsLoading(true);
     try {
@@ -139,6 +191,7 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
 
       const method = initialData ? "PUT" : "POST";
 
+      // Salvar anotação diária
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
@@ -153,14 +206,31 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
         }),
       });
 
-      if (!response.ok) throw new Error("Erro ao salvar anotação");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Erro ao salvar anotação");
+      }
 
       const result = await response.json();
+
+      // Salvar anotações horárias novas (que não têm ID)
+      const newHourlyNotes = hourlyNotes.filter((note) => !note.id);
+      for (const hourlyNote of newHourlyNotes) {
+        await fetch(`/api/notes/${result.id}/hourly`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            hora: hourlyNote.hora,
+            descricao: hourlyNote.descricao,
+          }),
+        });
+      }
+
       router.push(`/patients/${patientId}/notes/${result.id}`);
       router.refresh();
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Erro ao salvar anotação");
+      alert(error.message || "Erro ao salvar anotação");
     } finally {
       setIsLoading(false);
     }
@@ -316,6 +386,76 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
           >
             <Plus size={16} />
             {isCreatingTag ? "..." : "Criar"}
+          </button>
+        </div>
+      </div>
+
+      {/* Anotações Horárias */}
+      <div>
+        <label className="block text-sm font-medium text-slate-300 mb-2">
+          <Clock size={16} className="inline mr-2" />
+          Registros Horários
+        </label>
+
+        {/* Lista de anotações horárias */}
+        {hourlyNotes.length > 0 && (
+          <div className="space-y-2 mb-3">
+            {hourlyNotes.map((note, index) => (
+              <div
+                key={note.id || index}
+                className="flex items-start gap-3 p-3 bg-slate-900 rounded-lg"
+              >
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-blue-400">{note.hora}</p>
+                  <p className="text-sm text-slate-300">{note.descricao}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    note.id
+                      ? deleteHourlyNoteFromServer(note.id)
+                      : removeHourlyNote(index)
+                  }
+                  className="p-1 text-red-400 hover:text-red-300 transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Adicionar nova anotação horária */}
+        <div className="space-y-2 p-3 bg-slate-900 rounded-lg">
+          <div className="grid grid-cols-3 gap-2">
+            <input
+              type="time"
+              value={newHourlyHora}
+              onChange={(e) => setNewHourlyHora(e.target.value)}
+              className="px-3 py-2 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              placeholder="Hora"
+            />
+            <input
+              type="text"
+              value={newHourlyDesc}
+              onChange={(e) => setNewHourlyDesc(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addHourlyNote();
+                }
+              }}
+              className="col-span-2 px-3 py-2 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              placeholder="Descrição do registro..."
+            />
+          </div>
+          <button
+            type="button"
+            onClick={addHourlyNote}
+            className="w-full px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition-colors text-sm flex items-center justify-center gap-2"
+          >
+            <Plus size={16} />
+            Adicionar Registro
           </button>
         </div>
       </div>

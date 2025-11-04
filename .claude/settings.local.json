@@ -12,7 +12,8 @@
       "Bash(node update-theme.js:*)",
       "Bash(node fix-accent-colors.js:*)",
       "Bash(npm run seed:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

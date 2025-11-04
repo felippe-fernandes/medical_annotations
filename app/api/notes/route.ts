@@ -14,6 +14,28 @@ export async function POST(request: Request) {
       );
     }
 
+    // Verificar se já existe uma anotação para este dia
+    const noteDate = new Date(data);
+    const startOfDay = new Date(noteDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(noteDate.setHours(23, 59, 59, 999));
+
+    const existingNote = await prisma.dailyNote.findFirst({
+      where: {
+        patientId,
+        data: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+    });
+
+    if (existingNote) {
+      return NextResponse.json(
+        { error: "Já existe uma anotação para este dia. Edite a anotação existente." },
+        { status: 400 }
+      );
+    }
+
     const note = await prisma.dailyNote.create({
       data: {
         patientId,

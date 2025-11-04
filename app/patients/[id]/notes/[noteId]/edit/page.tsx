@@ -21,6 +21,9 @@ export default async function EditNotePage({
           tag: true,
         },
       },
+      hourlyNotes: {
+        orderBy: { hora: 'asc' },
+      },
     },
   });
 
@@ -62,6 +65,7 @@ export default async function EditNotePage({
               humor: note.humor,
               detalhesExtras: note.detalhesExtras,
               tags: note.tags,
+              hourlyNotes: note.hourlyNotes,
             }}
           />
         </div>

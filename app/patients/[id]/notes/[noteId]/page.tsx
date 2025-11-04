@@ -1,10 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { ArrowLeft, Moon, Sun, Plus, Clock, Trash2, Edit } from "lucide-react";
+import { ArrowLeft, Moon, Sun, Clock, Edit } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { HourlyNoteList } from "@/components/notes/HourlyNoteList";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { Logo } from "@/components/layout/Logo";
 
@@ -144,17 +143,30 @@ export default async function NoteDetailPage({
         </div>
 
         {/* Registros Horários */}
-        <div className="bg-slate-800 rounded-lg shadow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-100">Registros por Hora</h2>
-          </div>
+        {note.hourlyNotes.length > 0 && (
+          <div className="bg-slate-800 rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-slate-100 flex items-center gap-2">
+                <Clock size={20} />
+                Registros por Hora
+              </h2>
+            </div>
 
-          <HourlyNoteList
-            noteId={noteId}
-            patientId={id}
-            initialNotes={note.hourlyNotes}
-          />
-        </div>
+            <div className="space-y-3">
+              {note.hourlyNotes.map((hourlyNote) => (
+                <div
+                  key={hourlyNote.id}
+                  className="p-4 bg-slate-900 rounded-lg"
+                >
+                  <p className="text-sm font-medium text-blue-400 mb-1">
+                    {hourlyNote.hora}
+                  </p>
+                  <p className="text-slate-300">{hourlyNote.descricao}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
