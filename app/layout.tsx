@@ -7,6 +7,10 @@ export const metadata: Metadata = {
   title: "Anotações Médicas",
   description: "Sistema de anotações médicas para acompanhamento de pacientes",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/icon.svg",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

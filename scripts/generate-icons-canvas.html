@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Ícones 🩺</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0f172a;
+            color: #f1f5f9;
+        }
+        .canvas-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        canvas {
+            border: 2px solid #475569;
+            border-radius: 8px;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        .instructions {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        h1 { color: #3b82f6; }
+        h2 { color: #60a5fa; }
+        code {
+            background: #334155;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #fbbf24;
+        }
+    </style>
+</head>
+<body>
+    <h1>🩺 Gerador de Ícones para PWA</h1>
+
+    <div class="instructions">
+        <h2>Instruções:</h2>
+        <ol>
+            <li>Clique nos botões abaixo para baixar cada ícone</li>
+            <li>Salve os arquivos na pasta <code>public/</code> do seu projeto</li>
+            <li>Os ícones serão gerados automaticamente com o emoji 🩺</li>
+        </ol>
+    </div>
+
+    <div class="canvas-container">
+        <div>
+            <h3>512x512</h3>
+            <canvas id="canvas512" width="512" height="512"></canvas>
+            <br>
+            <button onclick="downloadIcon(512)">Baixar icon-512x512.png</button>
+        </div>
+        <div>
+            <h3>192x192</h3>
+            <canvas id="canvas192" width="192" height="192"></canvas>
+            <br>
+            <button onclick="downloadIcon(192)">Baixar icon-192x192.png</button>
+        </div>
+        <div>
+            <h3>32x32 (favicon)</h3>
+            <canvas id="canvas32" width="32" height="32"></canvas>
+            <br>
+            <button onclick="downloadIcon(32)">Baixar favicon.png</button>
+        </div>
+    </div>
+
+    <div class="instructions">
+        <h2>Próximos passos:</h2>
+        <p>Após baixar os ícones, use uma ferramenta online como <a href="https://www.icoconverter.com/" target="_blank" style="color: #60a5fa;">icoconverter.com</a> para converter o favicon.png para favicon.ico</p>
+    </div>
+
+    <script>
+        function drawEmoji(canvas, size) {
+            const ctx = canvas.getContext('2d');
+
+            // Fundo
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, size, size);
+
+            // Emoji
+            ctx.font = `${size * 0.8}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🩺', size / 2, size / 2);
+        }
+
+        function downloadIcon(size) {
+            const canvas = document.getElementById(`canvas${size}`);
+            const link = document.createElement('a');
+
+            if (size === 32) {
+                link.download = 'favicon.png';
+            } else {
+                link.download = `icon-${size}x${size}.png`;
+            }
+
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Gerar ícones ao carregar a página
+        window.onload = function() {
+            drawEmoji(document.getElementById('canvas512'), 512);
+            drawEmoji(document.getElementById('canvas192'), 192);
+            drawEmoji(document.getElementById('canvas32'), 32);
+        };
+    </script>
+</body>
+</html>
