@@ -17,7 +17,8 @@
       "Bash(git push:*)",
       "Bash(.env)",
       "Bash(npx prisma migrate:*)",
-      "Bash(start scripts/generate-icons-canvas.html)"
+      "Bash(start scripts/generate-icons-canvas.html)",
+      "Bash(npm test:*)"
     ],
     "deny": [],
     "ask": []
