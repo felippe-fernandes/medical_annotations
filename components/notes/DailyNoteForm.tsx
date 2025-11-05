@@ -66,11 +66,21 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
   const [newTagName, setNewTagName] = useState("");
   const [isCreatingTag, setIsCreatingTag] = useState(false);
 
+  // Função para obter hora atual no timezone GMT-3 (Brasil)
+  const getCurrentBrazilTime = () => {
+    const now = new Date();
+    // Ajustar para GMT-3
+    const brazilTime = new Date(now.getTime() - (3 * 60 * 60 * 1000));
+    const hours = brazilTime.getUTCHours().toString().padStart(2, '0');
+    const minutes = brazilTime.getUTCMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
   // Anotações horárias
   const [hourlyNotes, setHourlyNotes] = useState<HourlyNote[]>(
     initialData?.hourlyNotes || []
   );
-  const [newHourlyHora, setNewHourlyHora] = useState("");
+  const [newHourlyHora, setNewHourlyHora] = useState(getCurrentBrazilTime());
   const [newHourlyDesc, setNewHourlyDesc] = useState("");
 
   const {
