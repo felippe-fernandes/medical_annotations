@@ -14,6 +14,7 @@ datasource db {
 // Modelo de Paciente
 model Patient {
   id             String      @id @default(cuid())
+  userId         String      // ID do usuário autenticado no Supabase
   nome           String
   dataNascimento DateTime?
   createdAt      DateTime    @default(now())
@@ -23,6 +24,7 @@ model Patient {
   dailyNotes     DailyNote[]
 
   @@map("patients")
+  @@index([userId])
 }
 
 // Modelo de Anotação Diária

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 
 // GET - Buscar paciente por ID
 export async function GET(
@@ -7,9 +8,22 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
-    const patient = await prisma.patient.findUnique({
-      where: { id },
+    const patient = await prisma.patient.findFirst({
+      where: {
+        id,
+        userId: user.id
+      },
       include: {
         dailyNotes: {
           orderBy: { data: 'desc' },
@@ -41,9 +55,31 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
     const { nome, dataNascimento } = body;
+
+    // Verificar se o paciente pertence ao usuário
+    const existingPatient = await prisma.patient.findFirst({
+      where: { id, userId: user.id }
+    });
+
+    if (!existingPatient) {
+      return NextResponse.json(
+        { error: "Paciente não encontrado" },
+        { status: 404 }
+      );
+    }
 
     const patient = await prisma.patient.update({
       where: { id },
@@ -69,7 +105,30 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
+
+    // Verificar se o paciente pertence ao usuário
+    const existingPatient = await prisma.patient.findFirst({
+      where: { id, userId: user.id }
+    });
+
+    if (!existingPatient) {
+      return NextResponse.json(
+        { error: "Paciente não encontrado" },
+        { status: 404 }
+      );
+    }
+
     await prisma.patient.delete({
       where: { id },
     });

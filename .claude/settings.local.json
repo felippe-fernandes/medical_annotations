@@ -14,7 +14,9 @@
       "Bash(npm run seed:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(.env)",
+      "Bash(npx prisma migrate:*)"
     ],
     "deny": [],
     "ask": []

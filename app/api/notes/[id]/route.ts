@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 
 // GET - Buscar anotação por ID
 export async function GET(
@@ -7,6 +8,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
     const note = await prisma.dailyNote.findUnique({
       where: { id },
@@ -30,6 +41,14 @@ export async function GET(
       );
     }
 
+    // Verificar se o paciente pertence ao usuário
+    if (note.patient.userId !== user.id) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 403 }
+      );
+    }
+
     return NextResponse.json(note);
   } catch (error) {
     console.error(error);
@@ -46,9 +65,39 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
     const { data, horaDormiu, horaAcordou, humor, detalhesExtras, tagIds } = body;
+
+    // Verificar se a nota existe e pertence ao usuário
+    const existingNote = await prisma.dailyNote.findUnique({
+      where: { id },
+      include: { patient: true }
+    });
+
+    if (!existingNote) {
+      return NextResponse.json(
+        { error: "Anotação não encontrada" },
+        { status: 404 }
+      );
+    }
+
+    if (existingNote.patient.userId !== user.id) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 403 }
+      );
+    }
 
     // Se tagIds foi fornecido, atualizamos as tags
     const updateData: any = {
@@ -97,7 +146,38 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
+
+    // Verificar se a nota existe e pertence ao usuário
+    const existingNote = await prisma.dailyNote.findUnique({
+      where: { id },
+      include: { patient: true }
+    });
+
+    if (!existingNote) {
+      return NextResponse.json(
+        { error: "Anotação não encontrada" },
+        { status: 404 }
+      );
+    }
+
+    if (existingNote.patient.userId !== user.id) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 403 }
+      );
+    }
+
     await prisma.dailyNote.delete({
       where: { id },
     });

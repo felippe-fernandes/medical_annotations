@@ -1,10 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { parseLocalDate } from "@/lib/dateUtils";
+import { createClient } from "@/lib/supabase/server";
 
 // POST - Criar nova anotação
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { patientId, data, horaDormiu, horaAcordou, humor, detalhesExtras, tagIds } = body;
 
@@ -12,6 +23,18 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: "PatientId e data são obrigatórios" },
         { status: 400 }
+      );
+    }
+
+    // Verificar se o paciente pertence ao usuário
+    const patient = await prisma.patient.findFirst({
+      where: { id: patientId, userId: user.id }
+    });
+
+    if (!patient) {
+      return NextResponse.json(
+        { error: "Paciente não encontrado" },
+        { status: 404 }
       );
     }
 

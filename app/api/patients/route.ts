@@ -1,10 +1,22 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 
 // GET - Listar todos os pacientes
 export async function GET() {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 401 }
+      );
+    }
+
     const patients = await prisma.patient.findMany({
+      where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
       include: {
         _count: {
@@ -25,6 +37,16 @@ export async function GET() {
 // POST - Criar novo paciente
 export async function POST(request: Request) {
   try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Não autorizado" },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { nome, dataNascimento } = body;
 
@@ -37,6 +59,7 @@ export async function POST(request: Request) {
 
     const patient = await prisma.patient.create({
       data: {
+        userId: user.id,
         nome,
         dataNascimento: dataNascimento ? new Date(dataNascimento) : null,
       },
