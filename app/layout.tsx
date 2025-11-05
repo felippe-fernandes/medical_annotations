@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "react-datepicker/dist/react-datepicker.css";
 import { BottomNav } from "@/components/layout/BottomNav";
 
 export const metadata: Metadata = {

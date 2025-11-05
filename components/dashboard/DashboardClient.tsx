@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import { Users, FileText, Clock, TrendingUp, Calendar, Activity, Filter } from "lucide-react";
 import Link from "next/link";
 import { format, subDays, startOfDay } from "date-fns";
