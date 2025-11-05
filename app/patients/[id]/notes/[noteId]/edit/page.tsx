@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { DailyNoteForm } from "@/components/notes/DailyNoteForm";
 import { Logo } from "@/components/layout/Logo";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function EditNotePage({
   params,
@@ -11,6 +12,15 @@ export default async function EditNotePage({
   params: Promise<{ id: string; noteId: string }>;
 }) {
   const { id, noteId } = await params;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
 
   const note = await prisma.dailyNote.findUnique({
     where: { id: noteId },
@@ -28,6 +38,11 @@ export default async function EditNotePage({
   });
 
   if (!note || note.patientId !== id) {
+    notFound();
+  }
+
+  // Verificar se a nota pertence ao usuário
+  if (note.patient.userId !== user.id) {
     notFound();
   }
 

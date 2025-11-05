@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { DailyNoteForm } from "@/components/notes/DailyNoteForm";
 import { Logo } from "@/components/layout/Logo";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function NewNotePage({
   params,
@@ -12,8 +13,20 @@ export default async function NewNotePage({
 }) {
   const { id } = await params;
 
-  const patient = await prisma.patient.findUnique({
-    where: { id },
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const patient = await prisma.patient.findFirst({
+    where: {
+      id,
+      userId: user.id
+    },
   });
 
   if (!patient) {

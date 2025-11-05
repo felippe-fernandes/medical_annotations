@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft, Moon, Sun, Clock, Edit } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { Logo } from "@/components/layout/Logo";
+import { createClient } from "@/lib/supabase/server";
 
 const humorEmojis = ["😢", "😟", "😐", "🙂", "😄"];
 const humorLabels = ["Muito Ruim", "Ruim", "Neutro", "Bom", "Muito Bom"];
@@ -16,6 +17,15 @@ export default async function NoteDetailPage({
   params: Promise<{ id: string; noteId: string }>;
 }) {
   const { id, noteId } = await params;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
 
   const note = await prisma.dailyNote.findUnique({
     where: { id: noteId },
@@ -33,6 +43,11 @@ export default async function NoteDetailPage({
   });
 
   if (!note || note.patientId !== id) {
+    notFound();
+  }
+
+  // Verificar se a nota pertence ao usuário
+  if (note.patient.userId !== user.id) {
     notFound();
   }
 
