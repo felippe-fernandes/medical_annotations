@@ -2,9 +2,21 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { Plus } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
 export default async function PatientsPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
   const patients = await prisma.patient.findMany({
+    where: { userId: user.id },
     orderBy: { createdAt: 'desc' },
     include: {
       _count: {

@@ -1,13 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft, Plus, Calendar, Moon, Sun, Smile, Settings } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { format, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DeleteButton } from "@/components/ui/DeleteButton";
 import { StartDailyNote } from "@/components/notes/StartDailyNote";
 import { Logo } from "@/components/layout/Logo";
 import { ExportPDFButton } from "@/components/pdf/ExportPDFButton";
+import { createClient } from "@/lib/supabase/server";
 
 const humorEmojis = ["😢", "😟", "😐", "🙂", "😄"];
 
@@ -17,6 +18,15 @@ export default async function PatientDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
 
   const patient = await prisma.patient.findUnique({
     where: { id },
@@ -38,6 +48,11 @@ export default async function PatientDetailPage({
   });
 
   if (!patient) {
+    notFound();
+  }
+
+  // Verificar se o paciente pertence ao usuário
+  if (patient.userId !== user.id) {
     notFound();
   }
 
