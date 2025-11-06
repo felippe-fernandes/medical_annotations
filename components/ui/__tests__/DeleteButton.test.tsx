@@ -230,7 +230,7 @@ describe('DeleteButton', () => {
     })
   })
 
-  it('should have correct aria label', () => {
+  it('should have correct title attribute', () => {
     render(
       <DeleteButton
         itemType="patient"
@@ -241,6 +241,6 @@ describe('DeleteButton', () => {
     )
 
     const button = screen.getByRole('button')
-    expect(button).toHaveAttribute('aria-label', 'Deletar patient')
+    expect(button).toHaveAttribute('title', 'Excluir paciente')
   })
 })
