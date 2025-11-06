@@ -128,7 +128,7 @@ describe('DeleteButton', () => {
     })
   })
 
-  it('should delete tag successfully', async () => {
+  it('should handle non-patient types as notes', async () => {
     ;(global.confirm as jest.Mock).mockReturnValue(true)
     ;(global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
@@ -148,7 +148,7 @@ describe('DeleteButton', () => {
     fireEvent.click(button)
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/tags/tag-123', {
+      expect(global.fetch).toHaveBeenCalledWith('/api/notes/tag-123', {
         method: 'DELETE',
       })
     })
@@ -199,7 +199,7 @@ describe('DeleteButton', () => {
     fireEvent.click(button)
 
     await waitFor(() => {
-      expect(global.alert).toHaveBeenCalledWith('Erro ao deletar paciente')
+      expect(global.alert).toHaveBeenCalledWith('Erro ao deletar')
     })
   })
 
