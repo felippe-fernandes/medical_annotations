@@ -2,7 +2,9 @@ import type { NextConfig } from "next";
 import withPWA from "next-pwa";
 
 const nextConfig: NextConfig = {
-  turbopack: {},
+  eslint: {
+    dirs: ['app', 'components', 'lib'],
+  },
 };
 
 export default withPWA({

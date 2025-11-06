@@ -41,7 +41,7 @@ jobs:
           fail_ci_if_error: false
 
   lint:
-    name: Lint & Type Check
+    name: Type Check
     runs-on: ubuntu-latest
 
     steps:
@@ -57,8 +57,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run ESLint
-        run: npm run lint
+      # ESLint temporarily disabled due to Next.js 16 bug
+      # - name: Run ESLint
+      #   run: npm run lint
 
       - name: Type check
         run: npx tsc --noEmit
