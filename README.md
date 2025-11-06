@@ -1,6 +1,10 @@
-# Sistema de Anotações Médicas
+# 🩺 Medical Annotations
 
 Sistema web mobile-first para registro e acompanhamento de anotações médicas diárias de pacientes.
+
+[![CI](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/ci.yml/badge.svg)](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/ci.yml)
+[![E2E Tests](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/e2e.yml/badge.svg)](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/e2e.yml)
+[![CodeQL](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/codeql.yml/badge.svg)](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/codeql.yml)
 
 ## Funcionalidades
 
@@ -46,6 +50,19 @@ Sistema web mobile-first para registro e acompanhamento de anotações médicas 
   - Manifest configurado
   - Service Worker (em produção)
 
+- **Autenticação & Segurança**
+  - Login/Registro com Supabase Auth
+  - Email verification
+  - Multi-usuário com isolamento de dados
+  - Row Level Security (RLS)
+  - Toast notifications
+
+- **Testes**
+  - 67 testes unitários (Jest + React Testing Library)
+  - 30 testes E2E (Playwright)
+  - Cobertura de código > 80%
+  - CI/CD com GitHub Actions
+
 ### 🚀 Próximas Features (Sugeridas)
 
 - Gráficos de evolução (humor, padrões de sono)
@@ -58,15 +75,32 @@ Sistema web mobile-first para registro e acompanhamento de anotações médicas 
 
 ## Stack Tecnológica
 
-- **Frontend**: Next.js 16 (App Router) + React 19 + TypeScript
-- **Styling**: Tailwind CSS
-- **Backend**: Next.js API Routes
-- **Database**: PostgreSQL (Supabase)
-- **ORM**: Prisma
-- **Forms**: React Hook Form + Zod
-- **Icons**: Lucide React
-- **Date handling**: date-fns
-- **PWA**: next-pwa
+### Frontend
+- **Next.js 16** (App Router) + **React 19** + **TypeScript**
+- **Tailwind CSS** - Styling
+- **React Hook Form** + **Zod** - Form validation
+- **Lucide React** - Icons
+- **date-fns** - Date manipulation
+- **React Hot Toast** - Notifications
+- **React DatePicker** - Date selection
+
+### Backend & Database
+- **Next.js API Routes** - Serverless functions
+- **PostgreSQL** - Database (Supabase)
+- **Prisma** - ORM
+- **Supabase Auth** - Authentication
+
+### Testing
+- **Jest** - Unit testing
+- **React Testing Library** - Component testing
+- **Playwright** - E2E testing
+- **67 Unit Tests** + **30 E2E Tests**
+
+### DevOps
+- **GitHub Actions** - CI/CD pipeline
+- **Vercel** - Deployment
+- **CodeQL** - Security analysis
+- **Dependabot** - Dependency updates
 
 ## Configuração do Projeto
 
