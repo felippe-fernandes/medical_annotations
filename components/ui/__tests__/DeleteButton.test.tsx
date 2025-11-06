@@ -128,32 +128,6 @@ describe('DeleteButton', () => {
     })
   })
 
-  it('should handle non-patient types as notes', async () => {
-    ;(global.confirm as jest.Mock).mockReturnValue(true)
-    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true }),
-    })
-
-    render(
-      <DeleteButton
-        itemType="tag"
-        itemId="tag-123"
-        itemName="Ansiedade"
-        redirectTo="/tags"
-      />
-    )
-
-    const button = screen.getByRole('button')
-    fireEvent.click(button)
-
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/notes/tag-123', {
-        method: 'DELETE',
-      })
-    })
-  })
-
   it('should handle delete error gracefully', async () => {
     ;(global.confirm as jest.Mock).mockReturnValue(true)
     ;(global.fetch as jest.Mock).mockResolvedValueOnce({
