@@ -19,7 +19,7 @@ test.describe('Authentication Flow', () => {
     // Verificar que os elementos da página de login estão presentes
     await expect(page.getByRole('heading', { name: /entrar/i })).toBeVisible();
     await expect(page.getByPlaceholder(/email/i)).toBeVisible();
-    await expect(page.getByPlaceholder(/senha/i)).toBeVisible();
+    await expect(page.locator('input[type="password"]')).toBeVisible();
     await expect(page.getByRole('button', { name: /entrar/i })).toBeVisible();
 
     // Verificar link para registro
