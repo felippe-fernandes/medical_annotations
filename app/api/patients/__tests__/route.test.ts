@@ -28,14 +28,15 @@ describe('/api/patients', () => {
     })
 
     it('should return patients for authenticated user', async () => {
+      const now = new Date().toISOString()
       const mockPatients = [
         {
           id: 'patient-1',
           userId: mockUser.id,
           nome: 'João Silva',
-          dataNascimento: new Date('1990-01-01'),
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          dataNascimento: '1990-01-01T00:00:00.000Z',
+          createdAt: now,
+          updatedAt: now,
           _count: { dailyNotes: 5 },
         },
       ]
@@ -121,13 +122,14 @@ describe('/api/patients', () => {
     })
 
     it('should create patient successfully', async () => {
+      const now = new Date().toISOString()
       const mockPatient = {
         id: 'patient-1',
         userId: mockUser.id,
         nome: 'João Silva',
-        dataNascimento: new Date('1990-01-01'),
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        dataNascimento: '1990-01-01T00:00:00.000Z',
+        createdAt: now,
+        updatedAt: now,
       }
 
       ;(createClient as jest.Mock).mockResolvedValue({
@@ -161,13 +163,14 @@ describe('/api/patients', () => {
     })
 
     it('should handle patient creation without birth date', async () => {
+      const now = new Date().toISOString()
       const mockPatient = {
         id: 'patient-1',
         userId: mockUser.id,
         nome: 'João Silva',
         dataNascimento: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: now,
+        updatedAt: now,
       }
 
       ;(createClient as jest.Mock).mockResolvedValue({

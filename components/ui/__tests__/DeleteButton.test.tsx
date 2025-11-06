@@ -2,7 +2,9 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { DeleteButton } from '../DeleteButton'
 import { useRouter } from 'next/navigation'
 
-jest.mock('next/navigation')
+jest.mock('next/navigation', () => ({
+  useRouter: jest.fn(),
+}))
 
 global.fetch = jest.fn()
 

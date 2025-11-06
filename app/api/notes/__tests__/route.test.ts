@@ -89,7 +89,7 @@ describe('/api/notes', () => {
       const existingNote = {
         id: 'note-123',
         patientId,
-        data: new Date('2024-01-01'),
+        data: '2024-01-01T00:00:00.000Z',
       }
 
       ;(createClient as jest.Mock).mockResolvedValue({
@@ -126,7 +126,7 @@ describe('/api/notes', () => {
       const mockNote = {
         id: 'note-123',
         patientId,
-        data: new Date('2024-01-01'),
+        data: '2024-01-01T00:00:00.000Z',
         horaDormiu: '22:00',
         horaAcordou: '07:00',
         humor: 4,
@@ -175,7 +175,7 @@ describe('/api/notes', () => {
       const mockNote = {
         id: 'note-123',
         patientId,
-        data: new Date('2024-01-01'),
+        data: '2024-01-01T00:00:00.000Z',
         tags: [
           { tag: { id: 'tag-1', nome: 'Ansiedade', cor: '#ff0000' } },
           { tag: { id: 'tag-2', nome: 'Estresse', cor: '#00ff00' } },
@@ -229,7 +229,7 @@ describe('/api/notes', () => {
       const mockNote = {
         id: 'note-123',
         patientId,
-        data: new Date('2024-01-01'),
+        data: '2024-01-01T00:00:00.000Z',
         horaDormiu: null,
         horaAcordou: null,
         humor: null,

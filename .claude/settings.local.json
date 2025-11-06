@@ -18,7 +18,13 @@
       "Bash(.env)",
       "Bash(npx prisma migrate:*)",
       "Bash(start scripts/generate-icons-canvas.html)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(gh run list:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(npm run build:*)",
+      "Bash(gh run view:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": [],
     "ask": []

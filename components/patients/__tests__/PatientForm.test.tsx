@@ -106,7 +106,7 @@ describe('PatientForm', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             nome: 'João Silva',
-            dataNascimento: '',
+            dataNascimento: null,
           }),
         })
       })
@@ -177,8 +177,10 @@ describe('PatientForm', () => {
       const submitButton = screen.getByRole('button', { name: /criar/i })
       fireEvent.click(submitButton)
 
-      expect(submitButton).toBeDisabled()
-      expect(screen.getByText(/salvando/i)).toBeInTheDocument()
+      await waitFor(() => {
+        expect(submitButton).toBeDisabled()
+        expect(screen.getByText(/salvando/i)).toBeInTheDocument()
+      })
     })
   })
 

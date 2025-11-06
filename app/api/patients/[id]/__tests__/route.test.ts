@@ -30,13 +30,14 @@ describe('/api/patients/[id]', () => {
     })
 
     it('should return patient for authenticated user', async () => {
+      const now = new Date().toISOString()
       const mockPatient = {
         id: patientId,
         userId: mockUser.id,
         nome: 'João Silva',
-        dataNascimento: new Date('1990-01-01'),
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        dataNascimento: '1990-01-01T00:00:00.000Z',
+        createdAt: now,
+        updatedAt: now,
         dailyNotes: [],
       }
 
@@ -128,13 +129,14 @@ describe('/api/patients/[id]', () => {
     })
 
     it('should update patient successfully', async () => {
+      const now = new Date().toISOString()
       const existingPatient = {
         id: patientId,
         userId: mockUser.id,
         nome: 'João Silva',
-        dataNascimento: new Date('1990-01-01'),
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        dataNascimento: '1990-01-01T00:00:00.000Z',
+        createdAt: now,
+        updatedAt: now,
       }
 
       const updatedPatient = {
@@ -207,13 +209,14 @@ describe('/api/patients/[id]', () => {
     })
 
     it('should delete patient successfully', async () => {
+      const now = new Date().toISOString()
       const existingPatient = {
         id: patientId,
         userId: mockUser.id,
         nome: 'João Silva',
-        dataNascimento: new Date('1990-01-01'),
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        dataNascimento: '1990-01-01T00:00:00.000Z',
+        createdAt: now,
+        updatedAt: now,
       }
 
       ;(createClient as jest.Mock).mockResolvedValue({
