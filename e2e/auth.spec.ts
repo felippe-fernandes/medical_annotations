@@ -50,8 +50,8 @@ test.describe('Authentication Flow', () => {
     // Submeter formulário
     await page.getByRole('button', { name: /criar conta/i }).click();
 
-    // Verificar mensagem de erro
-    await expect(page.getByText(/senhas não coincidem/i)).toBeVisible();
+    // Verificar mensagem de erro (pode aparecer em toast ou no form)
+    await expect(page.getByText(/senhas não coincidem/i).first()).toBeVisible();
   });
 
   test('should show validation error for short password', async ({ page }) => {
@@ -65,8 +65,8 @@ test.describe('Authentication Flow', () => {
     // Submeter formulário
     await page.getByRole('button', { name: /criar conta/i }).click();
 
-    // Verificar mensagem de erro
-    await expect(page.getByText(/senha deve ter pelo menos 6 caracteres/i)).toBeVisible();
+    // Verificar mensagem de erro (pode aparecer em toast ou no form)
+    await expect(page.getByText(/senha deve ter pelo menos 6 caracteres/i).first()).toBeVisible();
   });
 
   test('should navigate between login and register pages', async ({ page }) => {
