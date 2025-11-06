@@ -35,8 +35,8 @@ test.describe('Patient Management', () => {
     await page.goto('/patients/new');
 
     // Verificar campos do formulário
-    await expect(page.getByLabelText(/nome/i)).toBeVisible();
-    await expect(page.getByLabelText(/data de nascimento/i)).toBeVisible();
+    await expect(page.getByPlaceholder(/nome/i)).toBeVisible();
+    await expect(page.locator('input[type="date"]')).toBeVisible();
     await expect(page.getByRole('button', { name: /salvar|criar/i })).toBeVisible();
     await expect(page.getByRole('button', { name: /cancelar/i })).toBeVisible();
   });

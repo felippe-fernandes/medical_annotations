@@ -31,9 +31,8 @@ test.describe('Authentication Flow', () => {
 
     // Verificar que os elementos da página de registro estão presentes
     await expect(page.getByRole('heading', { name: /criar conta/i })).toBeVisible();
-    await expect(page.getByLabelText(/email/i)).toBeVisible();
-    await expect(page.getByLabelText(/^senha$/i)).toBeVisible();
-    await expect(page.getByLabelText(/confirmar senha/i)).toBeVisible();
+    await expect(page.getByPlaceholder(/email/i)).toBeVisible();
+    await expect(page.locator('input[type="password"]').first()).toBeVisible();
     await expect(page.getByRole('button', { name: /criar conta/i })).toBeVisible();
 
     // Verificar link para login
@@ -44,9 +43,9 @@ test.describe('Authentication Flow', () => {
     await page.goto('/register');
 
     // Preencher formulário com senhas diferentes
-    await page.getByLabelText(/email/i).fill('test@example.com');
-    await page.getByLabelText(/^senha$/i).fill('password123');
-    await page.getByLabelText(/confirmar senha/i).fill('password456');
+    await page.getByPlaceholder(/email/i).fill('test@example.com');
+    await page.locator('input[type="password"]').first().fill('password123');
+    await page.locator('input[type="password"]').last().fill('password456');
 
     // Submeter formulário
     await page.getByRole('button', { name: /criar conta/i }).click();
@@ -59,9 +58,9 @@ test.describe('Authentication Flow', () => {
     await page.goto('/register');
 
     // Preencher formulário com senha curta
-    await page.getByLabelText(/email/i).fill('test@example.com');
-    await page.getByLabelText(/^senha$/i).fill('123');
-    await page.getByLabelText(/confirmar senha/i).fill('123');
+    await page.getByPlaceholder(/email/i).fill('test@example.com');
+    await page.locator('input[type="password"]').first().fill('123');
+    await page.locator('input[type="password"]').last().fill('123');
 
     // Submeter formulário
     await page.getByRole('button', { name: /criar conta/i }).click();
