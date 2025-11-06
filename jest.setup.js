@@ -30,6 +30,16 @@ global.Response = class Response {
   async json() {
     return JSON.parse(this.body)
   }
+
+  static json(data, init) {
+    return new Response(JSON.stringify(data), {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        ...init?.headers,
+      },
+    })
+  }
 }
 
 // Mock Next.js router
