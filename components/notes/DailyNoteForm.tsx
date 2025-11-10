@@ -19,11 +19,17 @@ const dailyNoteSchema = z.object({
 
 type DailyNoteFormData = z.infer<typeof dailyNoteSchema>;
 
-interface Tag {
-  id: string;
-  nome: string;
-  cor: string;
-}
+// Tags pré-definidas comuns
+const COMMON_TAGS = [
+  "Ansiedade",
+  "Estresse",
+  "Insônia",
+  "Dor de cabeça",
+  "Consulta médica",
+  "Medicamento",
+  "Exercício",
+  "Alimentação",
+];
 
 interface HourlyNote {
   id?: string;
@@ -59,12 +65,10 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
   const [selectedHumor, setSelectedHumor] = useState<string>(
     initialData?.humor?.toString() || ""
   );
-  const [availableTags, setAvailableTags] = useState<Tag[]>([]);
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
+  const [selectedTags, setSelectedTags] = useState<string[]>(
     initialData?.tags || []
   );
   const [newTagName, setNewTagName] = useState("");
-  const [isCreatingTag, setIsCreatingTag] = useState(false);
 
   // Função para obter hora atual no timezone GMT-3 (Brasil)
   const getCurrentBrazilTime = () => {
@@ -101,58 +105,27 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
     },
   });
 
-  // Carregar tags disponíveis
-  useEffect(() => {
-    const fetchTags = async () => {
-      try {
-        const response = await fetch("/api/tags");
-        if (response.ok) {
-          const tags = await response.json();
-          setAvailableTags(tags);
-        }
-      } catch (error) {
-        console.error("Error fetching tags:", error);
-      }
-    };
-    fetchTags();
-  }, []);
-
-  const toggleTag = (tagId: string) => {
-    setSelectedTagIds((prev) =>
-      prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
+  const toggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
   };
 
-  const createNewTag = async () => {
-    if (!newTagName.trim()) return;
+  const addCustomTag = () => {
+    const trimmedTag = newTagName.trim();
+    if (!trimmedTag) return;
 
-    setIsCreatingTag(true);
-    try {
-      const response = await fetch("/api/tags", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome: newTagName.trim() }),
-      });
-
-      if (response.ok) {
-        const newTag = await response.json();
-        setAvailableTags((prev) => [...prev, newTag]);
-        setSelectedTagIds((prev) => [...prev, newTag.id]);
-        setNewTagName("");
-      } else {
-        const error = await response.json();
-        alert(error.error || "Erro ao criar tag");
-      }
-    } catch (error) {
-      console.error("Error creating tag:", error);
-      alert("Erro ao criar tag");
-    } finally {
-      setIsCreatingTag(false);
+    if (selectedTags.includes(trimmedTag)) {
+      alert("Esta tag já foi adicionada");
+      return;
     }
+
+    setSelectedTags((prev) => [...prev, trimmedTag]);
+    setNewTagName("");
   };
 
-  const removeTag = (tagId: string) => {
-    setSelectedTagIds((prev) => prev.filter((id) => id !== tagId));
+  const removeTag = (tag: string) => {
+    setSelectedTags((prev) => prev.filter((t) => t !== tag));
   };
 
   // Funções para anotações horárias
@@ -213,7 +186,7 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
           horaAcordou: data.horaAcordou || null,
           humor: data.humor ? parseInt(data.humor) : null,
           detalhesExtras: data.detalhesExtras || null,
-          tagIds: selectedTagIds,
+          tags: selectedTags,
         }),
       });
 
@@ -326,57 +299,50 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
           Tags (marcar eventos importantes)
         </label>
 
-        {/* Tags disponíveis */}
+        {/* Tags comuns sugeridas */}
+        <p className="text-xs text-slate-400 mb-2">Tags comuns:</p>
         <div className="flex flex-wrap gap-2 mb-3">
-          {availableTags.map((tag) => (
+          {COMMON_TAGS.map((tag) => (
             <button
-              key={tag.id}
+              key={tag}
               type="button"
-              onClick={() => toggleTag(tag.id)}
-              style={{
-                backgroundColor: selectedTagIds.includes(tag.id) ? tag.cor : undefined,
-                borderColor: tag.cor,
-              }}
-              className={`px-3 py-1 rounded-full text-sm transition-all border-2 ${
-                selectedTagIds.includes(tag.id)
-                  ? "text-white"
+              onClick={() => toggleTag(tag)}
+              className={`px-3 py-1 rounded-full text-sm transition-all ${
+                selectedTags.includes(tag)
+                  ? "bg-blue-600 text-white"
                   : "bg-slate-700 text-slate-300 hover:bg-slate-600"
               }`}
             >
-              {tag.nome}
+              {tag}
             </button>
           ))}
         </div>
 
         {/* Tags selecionadas */}
-        {selectedTagIds.length > 0 && (
+        {selectedTags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3 p-3 bg-slate-900 rounded-lg">
             <p className="w-full text-xs text-slate-400 mb-1">Tags selecionadas:</p>
-            {selectedTagIds.map((tagId) => {
-              const tag = availableTags.find(t => t.id === tagId);
-              if (!tag) return null;
-              return (
-                <span
-                  key={tagId}
-                  style={{ backgroundColor: tag.cor }}
-                  className="inline-flex items-center gap-1 px-3 py-1 text-white rounded-full text-sm"
+            {selectedTags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-full text-sm"
+              >
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => removeTag(tag)}
+                  className="hover:opacity-80 rounded-full p-0.5"
                 >
-                  {tag.nome}
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tagId)}
-                    className="hover:opacity-80 rounded-full p-0.5"
-                  >
-                    <X size={14} />
-                  </button>
-                </span>
-              );
-            })}
+                  <X size={14} />
+                </button>
+              </span>
+            ))}
           </div>
         )}
 
-        {/* Criar nova tag */}
+        {/* Adicionar tag personalizada */}
         <div className="space-y-1">
+          <p className="text-xs text-slate-400 mb-1">Ou adicione uma tag personalizada:</p>
           <div className="flex gap-2">
             <input
               type="text"
@@ -385,21 +351,21 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
               onKeyPress={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  createNewTag();
+                  addCustomTag();
                 }
               }}
               maxLength={30}
-              placeholder="Criar nova tag..."
+              placeholder="Digite sua tag..."
               className="flex-1 px-3 py-2 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
             <button
               type="button"
-              onClick={createNewTag}
-              disabled={isCreatingTag || !newTagName.trim()}
+              onClick={addCustomTag}
+              disabled={!newTagName.trim()}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors text-sm flex items-center gap-1"
             >
               <Plus size={16} />
-              {isCreatingTag ? "..." : "Criar"}
+              Adicionar
             </button>
           </div>
           {newTagName.length > 0 && (
