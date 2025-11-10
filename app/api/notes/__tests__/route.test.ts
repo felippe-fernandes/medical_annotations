@@ -211,6 +211,29 @@ describe('/api/notes', () => {
       )
     })
 
+    it('should return 400 if tag exceeds 30 characters', async () => {
+      ;(createClient as jest.Mock).mockResolvedValue({
+        auth: {
+          getUser: jest.fn().mockResolvedValue({ data: { user: mockUser }, error: null }),
+        },
+      })
+
+      const request = new Request('http://localhost:3000/api/notes', {
+        method: 'POST',
+        body: JSON.stringify({
+          patientId,
+          data: '2024-01-01',
+          tags: ['Ansiedade', 'Esta tag tem mais de trinta caracteres'],
+        }),
+      })
+
+      const response = await POST(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Cada tag deve ter no máximo 30 caracteres')
+    })
+
     it('should create note without optional fields', async () => {
       const mockPatient = {
         id: patientId,

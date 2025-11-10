@@ -26,6 +26,17 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validar comprimento das tags (máximo 30 caracteres)
+    if (tags && Array.isArray(tags)) {
+      const invalidTag = tags.find((tag: string) => tag.length > 30);
+      if (invalidTag) {
+        return NextResponse.json(
+          { error: "Cada tag deve ter no máximo 30 caracteres" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Verificar se o paciente pertence ao usuário
     const patient = await prisma.patient.findFirst({
       where: { id: patientId, userId: user.id }

@@ -74,6 +74,17 @@ export async function PUT(
     const body = await request.json();
     const { data, horaDormiu, horaAcordou, humor, detalhesExtras, tags } = body;
 
+    // Validar comprimento das tags (máximo 30 caracteres)
+    if (tags && Array.isArray(tags)) {
+      const invalidTag = tags.find((tag: string) => tag.length > 30);
+      if (invalidTag) {
+        return NextResponse.json(
+          { error: "Cada tag deve ter no máximo 30 caracteres" },
+          { status: 400 }
+        );
+      }
+    }
+
     // Verificar se a nota existe e pertence ao usuário
     const existingNote = await prisma.dailyNote.findUnique({
       where: { id },
