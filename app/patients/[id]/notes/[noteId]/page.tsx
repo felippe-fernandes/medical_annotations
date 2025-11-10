@@ -34,11 +34,6 @@ export default async function NoteDetailPage({
       hourlyNotes: {
         orderBy: { hora: 'asc' }
       },
-      tags: {
-        include: {
-          tag: true,
-        },
-      },
     },
   });
 
@@ -116,13 +111,12 @@ export default async function NoteDetailPage({
             <div className="mb-6 pb-6 border-b border-slate-700">
               <p className="text-sm text-slate-500 mb-3">Tags</p>
               <div className="flex flex-wrap gap-2">
-                {note.tags.map((dailyNoteTag) => (
+                {note.tags.map((tag, index) => (
                   <span
-                    key={dailyNoteTag.tag.id}
-                    style={{ backgroundColor: dailyNoteTag.tag.cor }}
-                    className="inline-flex items-center px-3 py-1 text-white rounded-full text-sm"
+                    key={index}
+                    className="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded-full text-sm"
                   >
-                    {dailyNoteTag.tag.nome}
+                    {tag}
                   </span>
                 ))}
               </div>

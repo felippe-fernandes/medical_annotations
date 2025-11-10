@@ -115,11 +115,6 @@ export async function GET(request: Request) {
     orderBy: { data: "desc" },
     include: {
       patient: true,
-      tags: {
-        include: {
-          tag: true,
-        },
-      },
     },
   });
 

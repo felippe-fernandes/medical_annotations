@@ -37,11 +37,6 @@ export default async function PatientDetailPage({
           hourlyNotes: {
             orderBy: { hora: 'asc' }
           },
-          tags: {
-            include: {
-              tag: true,
-            },
-          },
         }
       },
     },
@@ -106,7 +101,7 @@ export default async function PatientDetailPage({
                   horaAcordou: note.horaAcordou,
                   humor: note.humor,
                   detalhesExtras: note.detalhesExtras,
-                  tags: note.tags.map((t) => t.tag.nome),
+                  tags: note.tags,
                   hourlyNotes: note.hourlyNotes.map((hn) => ({
                     hora: hn.hora,
                     descricao: hn.descricao,
@@ -184,13 +179,12 @@ export default async function PatientDetailPage({
                 {/* Tags */}
                 {note.tags && note.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-2">
-                    {note.tags.map((dailyNoteTag) => (
+                    {note.tags.map((tag, index) => (
                       <span
-                        key={dailyNoteTag.tag.id}
-                        style={{ backgroundColor: dailyNoteTag.tag.cor }}
-                        className="inline-block px-2 py-0.5 text-white rounded-full text-xs"
+                        key={index}
+                        className="inline-block px-2 py-0.5 bg-blue-600 text-white rounded-full text-xs"
                       >
-                        {dailyNoteTag.tag.nome}
+                        {tag}
                       </span>
                     ))}
                   </div>

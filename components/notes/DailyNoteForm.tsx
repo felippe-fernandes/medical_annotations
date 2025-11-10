@@ -40,7 +40,7 @@ interface DailyNoteFormProps {
     horaAcordou: string | null;
     humor: number | null;
     detalhesExtras: string | null;
-    tags: { tag: Tag }[];
+    tags: string[];
     hourlyNotes?: HourlyNote[];
   };
 }
@@ -61,7 +61,7 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
   );
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(
-    initialData?.tags?.map(t => t.tag.id) || []
+    initialData?.tags || []
   );
   const [newTagName, setNewTagName] = useState("");
   const [isCreatingTag, setIsCreatingTag] = useState(false);
@@ -376,29 +376,37 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
         )}
 
         {/* Criar nova tag */}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newTagName}
-            onChange={(e) => setNewTagName(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                createNewTag();
-              }
-            }}
-            placeholder="Criar nova tag..."
-            className="flex-1 px-3 py-2 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          />
-          <button
-            type="button"
-            onClick={createNewTag}
-            disabled={isCreatingTag || !newTagName.trim()}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors text-sm flex items-center gap-1"
-          >
-            <Plus size={16} />
-            {isCreatingTag ? "..." : "Criar"}
-          </button>
+        <div className="space-y-1">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  createNewTag();
+                }
+              }}
+              maxLength={30}
+              placeholder="Criar nova tag..."
+              className="flex-1 px-3 py-2 border border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+            <button
+              type="button"
+              onClick={createNewTag}
+              disabled={isCreatingTag || !newTagName.trim()}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors text-sm flex items-center gap-1"
+            >
+              <Plus size={16} />
+              {isCreatingTag ? "..." : "Criar"}
+            </button>
+          </div>
+          {newTagName.length > 0 && (
+            <p className="text-xs text-slate-400 text-right">
+              {newTagName.length}/30 caracteres
+            </p>
+          )}
         </div>
       </div>
 
