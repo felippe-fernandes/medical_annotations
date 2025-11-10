@@ -26,11 +26,6 @@ export default async function EditNotePage({
     where: { id: noteId },
     include: {
       patient: true,
-      tags: {
-        include: {
-          tag: true,
-        },
-      },
       hourlyNotes: {
         orderBy: { hora: 'asc' },
       },
