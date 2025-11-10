@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { patientId, data, horaDormiu, horaAcordou, humor, detalhesExtras, tagIds } = body;
+    const { patientId, data, horaDormiu, horaAcordou, humor, detalhesExtras, tags } = body;
 
     if (!patientId || !data) {
       return NextResponse.json(
@@ -70,18 +70,7 @@ export async function POST(request: Request) {
         horaAcordou: horaAcordou || null,
         humor: humor || null,
         detalhesExtras: detalhesExtras || null,
-        tags: tagIds && tagIds.length > 0 ? {
-          create: tagIds.map((tagId: string) => ({
-            tag: { connect: { id: tagId } },
-          })),
-        } : undefined,
-      },
-      include: {
-        tags: {
-          include: {
-            tag: true,
-          },
-        },
+        tags: tags || [],
       },
     });
 

@@ -170,16 +170,13 @@ describe('/api/notes', () => {
         nome: 'João Silva',
       }
 
-      const tagIds = ['tag-1', 'tag-2']
+      const tags = ['Ansiedade', 'Estresse']
 
       const mockNote = {
         id: 'note-123',
         patientId,
         data: '2024-01-01T00:00:00.000Z',
-        tags: [
-          { tag: { id: 'tag-1', nome: 'Ansiedade', cor: '#ff0000' } },
-          { tag: { id: 'tag-2', nome: 'Estresse', cor: '#00ff00' } },
-        ],
+        tags: ['Ansiedade', 'Estresse'],
       }
 
       ;(createClient as jest.Mock).mockResolvedValue({
@@ -197,7 +194,7 @@ describe('/api/notes', () => {
         body: JSON.stringify({
           patientId,
           data: '2024-01-01',
-          tagIds,
+          tags,
         }),
       })
 
@@ -208,12 +205,7 @@ describe('/api/notes', () => {
       expect(prisma.dailyNote.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            tags: {
-              create: expect.arrayContaining([
-                { tag: { connect: { id: 'tag-1' } } },
-                { tag: { connect: { id: 'tag-2' } } },
-              ]),
-            },
+            tags: ['Ansiedade', 'Estresse'],
           }),
         })
       )

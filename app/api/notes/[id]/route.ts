@@ -26,11 +26,6 @@ export async function GET(
         hourlyNotes: {
           orderBy: { hora: 'asc' }
         },
-        tags: {
-          include: {
-            tag: true,
-          },
-        },
       },
     });
 
@@ -77,7 +72,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { data, horaDormiu, horaAcordou, humor, detalhesExtras, tagIds } = body;
+    const { data, horaDormiu, horaAcordou, humor, detalhesExtras, tags } = body;
 
     // Verificar se a nota existe e pertence ao usuário
     const existingNote = await prisma.dailyNote.findUnique({
@@ -99,35 +94,18 @@ export async function PUT(
       );
     }
 
-    // Se tagIds foi fornecido, atualizamos as tags
     const updateData: any = {
       data: data ? new Date(data) : undefined,
       horaDormiu: horaDormiu !== undefined ? horaDormiu : undefined,
       horaAcordou: horaAcordou !== undefined ? horaAcordou : undefined,
       humor: humor !== undefined ? humor : undefined,
       detalhesExtras: detalhesExtras !== undefined ? detalhesExtras : undefined,
+      tags: tags !== undefined ? tags : undefined,
     };
-
-    if (tagIds !== undefined) {
-      // Remove todas as tags existentes e adiciona as novas
-      updateData.tags = {
-        deleteMany: {},
-        create: tagIds.map((tagId: string) => ({
-          tag: { connect: { id: tagId } },
-        })),
-      };
-    }
 
     const note = await prisma.dailyNote.update({
       where: { id },
       data: updateData,
-      include: {
-        tags: {
-          include: {
-            tag: true,
-          },
-        },
-      },
     });
 
     return NextResponse.json(note);
