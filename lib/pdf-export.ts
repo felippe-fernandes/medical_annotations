@@ -86,11 +86,14 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
   let filteredNotes = [...patient.dailyNotes];
 
   if (options.startDate && options.endDate) {
+    const filterStart = startOfDay(new Date(options.startDate));
+    const filterEnd = endOfDay(new Date(options.endDate));
+
     filteredNotes = filteredNotes.filter((note) => {
-      const noteDate = new Date(note.data);
+      const noteDate = startOfDay(new Date(note.data));
       return isWithinInterval(noteDate, {
-        start: startOfDay(options.startDate!),
-        end: endOfDay(options.endDate!),
+        start: filterStart,
+        end: filterEnd,
       });
     });
   }
@@ -135,12 +138,21 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
 
   yPosition += 10;
 
-  // Ordenar notas por data (mais recente primeiro)
-  const sortedNotes = filteredNotes.sort(
+  // Ordenar notas por data (mais recente primeiro) e remover duplicatas
+  const uniqueNotes = filteredNotes.reduce((acc, note) => {
+    const noteTime = new Date(note.data).getTime();
+    const exists = acc.some(n => new Date(n.data).getTime() === noteTime);
+    if (!exists) {
+      acc.push(note);
+    }
+    return acc;
+  }, [] as DailyNote[]);
+
+  const sortedNotes = uniqueNotes.sort(
     (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
   );
 
-  sortedNotes.forEach((note, index) => {
+  sortedNotes.forEach((note) => {
     // Verificar se precisa de nova página
     if (yPosition > 250) {
       doc.addPage();
