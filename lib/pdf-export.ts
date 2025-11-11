@@ -54,7 +54,7 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
   // Header - Logo e Título
   doc.setFontSize(24);
   doc.setTextColor(15, 23, 42); // slate-900
-  doc.text("🩺 Med Notes", margin, yPosition);
+  doc.text("Med Notes", margin, yPosition);
 
   yPosition += 10;
   doc.setFontSize(10);
@@ -290,6 +290,22 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
   }
 
   // Salvar PDF
-  const fileName = `${patient.nome.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`;
+  let fileName = patient.nome.replace(/\s+/g, "_");
+
+  // Adicionar período filtrado ao nome se houver
+  if (options.startDate && options.endDate) {
+    const startStr = format(options.startDate, "dd-MM-yyyy");
+    const endStr = format(options.endDate, "dd-MM-yyyy");
+    fileName += `_${startStr}_a_${endStr}`;
+  }
+
+  // Adicionar tag filtrada ao nome se houver
+  if (options.filterTag) {
+    fileName += `_${options.filterTag.replace(/\s+/g, "_")}`;
+  }
+
+  // Adicionar data de geração
+  fileName += `_gerado_${format(new Date(), "dd-MM-yyyy")}.pdf`;
+
   doc.save(fileName);
 }
