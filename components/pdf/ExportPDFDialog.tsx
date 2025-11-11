@@ -51,8 +51,16 @@ export function ExportPDFDialog({ patient, onClose }: ExportPDFDialogProps) {
       filterTag?: string;
     } = {};
 
-    if (startDate) options.startDate = new Date(startDate);
-    if (endDate) options.endDate = new Date(endDate);
+    // Criar datas no timezone local (não UTC)
+    // Input date vem como "2025-11-03", precisamos criar como data local
+    if (startDate) {
+      const [year, month, day] = startDate.split('-').map(Number);
+      options.startDate = new Date(year, month - 1, day);
+    }
+    if (endDate) {
+      const [year, month, day] = endDate.split('-').map(Number);
+      options.endDate = new Date(year, month - 1, day);
+    }
     if (selectedTag) options.filterTag = selectedTag;
 
     generatePatientPDF(patient, options);
