@@ -1,6 +1,9 @@
 import { jsPDF } from "jspdf";
 import { format, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toZonedTime } from "date-fns-tz";
+
+const BRAZIL_TIMEZONE = "America/Sao_Paulo"; // GMT-3
 
 interface HourlyNote {
   hora: string;
@@ -86,11 +89,16 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
   let filteredNotes = [...patient.dailyNotes];
 
   if (options.startDate && options.endDate) {
-    const filterStart = startOfDay(new Date(options.startDate));
-    const filterEnd = endOfDay(new Date(options.endDate));
+    // Converter datas para o timezone do Brasil (GMT-3)
+    const filterStartUTC = toZonedTime(new Date(options.startDate), BRAZIL_TIMEZONE);
+    const filterEndUTC = toZonedTime(new Date(options.endDate), BRAZIL_TIMEZONE);
+
+    const filterStart = startOfDay(filterStartUTC);
+    const filterEnd = endOfDay(filterEndUTC);
 
     filteredNotes = filteredNotes.filter((note) => {
-      const noteDate = startOfDay(new Date(note.data));
+      const noteUTC = toZonedTime(new Date(note.data), BRAZIL_TIMEZONE);
+      const noteDate = startOfDay(noteUTC);
       return isWithinInterval(noteDate, {
         start: filterStart,
         end: filterEnd,
