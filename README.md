@@ -1,273 +1,385 @@
 # 🩺 Medical Annotations
 
-Sistema web mobile-first para registro e acompanhamento de anotações médicas diárias de pacientes.
+> Sistema web mobile-first para registro e acompanhamento de anotações médicas diárias de pacientes.
 
 [![CI](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/ci.yml/badge.svg)](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/ci.yml)
 [![E2E Tests](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/e2e.yml/badge.svg)](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/e2e.yml)
-[![CodeQL](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/codeql.yml/badge.svg)](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
-## Funcionalidades
+## 📖 Índice
 
-### ✅ Implementado
+- [Sobre](#-sobre)
+- [Funcionalidades](#-funcionalidades)
+- [Stack Tecnológica](#-stack-tecnológica)
+- [Início Rápido](#-início-rápido)
+- [Estrutura do Projeto](#-estrutura-do-projeto)
+- [Database Schema](#-database-schema)
+- [Testes](#-testes)
+- [Deploy](#-deploy)
+- [Contribuindo](#-contribuindo)
 
-- **Dashboard**
-  - Estatísticas gerais (total de pacientes, anotações, registros horários)
-  - Últimas anotações criadas
-  - Pacientes mais ativos
-  - Anotações dos últimos 7 dias
-  - Navegação rápida
+## 🎯 Sobre
 
-- **Gestão de Pacientes**
-  - Cadastrar pacientes com nome e data de nascimento
-  - Listar todos os pacientes
-  - Ver detalhes e histórico de cada paciente
-  - Editar informações do paciente
-  - Excluir paciente (com confirmação)
+Med Notes é uma aplicação Progressive Web App (PWA) desenvolvida para profissionais de saúde registrarem e acompanharem anotações médicas diárias de seus pacientes. Com design mobile-first e funcionalidade offline, permite o acompanhamento contínuo de métricas importantes como humor, padrões de sono e eventos específicos ao longo do dia.
 
-- **Anotações Diárias**
-  - Registrar data da anotação
-  - Hora que dormiu / acordou
-  - Humor (escala visual de 1-5 com emojis)
-  - Campo de detalhes extras (texto livre)
-  - Visualizar anotações em formato de timeline
-  - Editar anotação existente
-  - Excluir anotação (com confirmação)
+### Destaques
 
-- **Registros por Hora**
-  - Adicionar registros em horários específicos do dia
-  - Cada registro contém hora e descrição
-  - Adicionar/remover registros dinamicamente
-  - Listagem ordenada por horário
+✨ **PWA Instalável** - Funciona como app nativo no celular
+🔒 **Multi-tenant Seguro** - Isolamento total de dados por usuário
+📊 **Dashboard Analytics** - Visualize estatísticas e tendências
+📱 **Mobile-First** - Interface otimizada para dispositivos móveis
+🎨 **Dark Mode** - Design moderno em tema escuro
+📄 **Export PDF** - Gere relatórios profissionais
+🏷️ **Tags Flexíveis** - Organize anotações com tags personalizadas
 
-- **Navegação Mobile**
-  - Bottom navigation bar responsivo
-  - Interface otimizada para mobile
-  - Navegação entre Dashboard e Pacientes
+## ✨ Funcionalidades
 
-- **PWA (Progressive Web App)**
-  - Instalável no celular/desktop
-  - Ícone na tela inicial
-  - Manifest configurado
-  - Service Worker (em produção)
+### Gestão de Pacientes
+- ✅ Cadastro completo com nome e data de nascimento
+- ✅ Lista paginada com busca
+- ✅ Visualização de histórico completo
+- ✅ Edição e exclusão com confirmação
+- ✅ Isolamento de dados por usuário (RLS)
 
-- **Autenticação & Segurança**
-  - Login/Registro com Supabase Auth
-  - Email verification
-  - Multi-usuário com isolamento de dados
-  - Row Level Security (RLS)
-  - Toast notifications
+### Anotações Diárias
+- ✅ Registro de data, horários de sono e humor
+- ✅ Campo de detalhes extras com texto livre
+- ✅ Sistema de tags (pré-definidas + personalizadas)
+- ✅ Limite de 30 caracteres por tag
+- ✅ Visualização em timeline
+- ✅ Edição e exclusão
 
-- **Testes**
-  - 67 testes unitários (Jest + React Testing Library)
-  - 30 testes E2E (Playwright)
-  - Cobertura de código > 80%
-  - CI/CD com GitHub Actions
+### Registros Horários
+- ✅ Eventos em horários específicos do dia
+- ✅ Adicionar/remover dinamicamente
+- ✅ Ordenação automática por horário
+- ✅ Integrado às anotações diárias
 
-### 🚀 Próximas Features (Sugeridas)
+### Dashboard & Analytics
+- ✅ Total de pacientes, anotações e registros
+- ✅ Últimas 5 anotações criadas
+- ✅ Top 5 pacientes mais ativos
+- ✅ Gráfico dos últimos 7 dias
+- ✅ Filtros por período (7/30/90 dias)
 
-- Gráficos de evolução (humor, padrões de sono)
-- Filtros avançados (por data, paciente, humor)
-- Export de dados (PDF, CSV)
-- Modo offline completo
-- Tags/categorias para anotações
-- Busca em texto completo
-- Notificações push
+### Export & Relatórios
+- ✅ Exportação em PDF profissional
+- ✅ Filtro por período de datas
+- ✅ Filtro por tags específicas
+- ✅ Suporte a timezone brasileiro (GMT-3)
+- ✅ Deduplicação automática de registros
 
-## Stack Tecnológica
+### Autenticação & Segurança
+- ✅ Login/Registro com Supabase Auth
+- ✅ Verificação de email
+- ✅ Row Level Security (RLS)
+- ✅ Isolamento completo entre usuários
+- ✅ Proteção contra CSRF e XSS
+
+### PWA Features
+- ✅ Instalável em iOS/Android/Desktop
+- ✅ Ícones e splash screens
+- ✅ Service Worker em produção
+- ✅ Manifest configurado
+
+## 🛠 Stack Tecnológica
 
 ### Frontend
-- **Next.js 16** (App Router) + **React 19** + **TypeScript**
-- **Tailwind CSS** - Styling
-- **React Hook Form** + **Zod** - Form validation
-- **Lucide React** - Icons
-- **date-fns** - Date manipulation
-- **React Hot Toast** - Notifications
-- **React DatePicker** - Date selection
+```
+Next.js 16          App Router + Server Components
+React 19            Concurrent Features
+TypeScript 5        Type Safety
+Tailwind CSS 4      Utility-First Styling
+React Hook Form     Form Management
+Zod                 Schema Validation
+Lucide React        Icon System
+date-fns            Date Manipulation (+ timezone support)
+jsPDF               PDF Generation
+```
 
 ### Backend & Database
-- **Next.js API Routes** - Serverless functions
-- **PostgreSQL** - Database (Supabase)
-- **Prisma** - ORM
-- **Supabase Auth** - Authentication
+```
+Next.js API Routes  Serverless Functions
+PostgreSQL          Primary Database
+Prisma 6            ORM & Migrations
+Supabase            Auth + Hosting + RLS
+```
 
-### Testing
-- **Jest** - Unit testing
-- **React Testing Library** - Component testing
-- **Playwright** - E2E testing
-- **67 Unit Tests** + **30 E2E Tests**
+### Testing & Quality
+```
+Jest                Unit Testing (67 tests)
+React Testing Lib   Component Testing
+Playwright          E2E Testing (30 tests)
+GitHub Actions      CI/CD Pipeline
+ESLint              Code Linting
+```
 
 ### DevOps
-- **GitHub Actions** - CI/CD pipeline
-- **Vercel** - Deployment
-- **CodeQL** - Security analysis
-- **Dependabot** - Dependency updates
+```
+Vercel              Production Hosting
+GitHub Actions      Automated Testing
+Supabase            Database Hosting
+```
 
-## Configuração do Projeto
+## 🚀 Início Rápido
 
-### 1. Pré-requisitos
+### Pré-requisitos
 
-- Node.js 20+
-- npm ou yarn
-- Conta no Supabase (gratuita)
+- Node.js 20+ e npm
+- Conta Supabase (gratuita)
 
-### 2. Criar Projeto no Supabase
+### 1. Clone o Repositório
 
-1. Acesse [supabase.com](https://supabase.com)
-2. Crie uma nova conta ou faça login
-3. Clique em "New Project"
-4. Preencha:
-   - Nome do projeto: `medical-annotations`
-   - Database Password: (crie uma senha forte)
-   - Region: escolha a mais próxima
-5. Aguarde o projeto ser criado (~2 minutos)
+```bash
+git clone https://github.com/felippe-fernandes/medical_annotations.git
+cd medical_annotations
+```
 
-### 3. Obter Credenciais do Supabase
+### 2. Configure o Supabase
 
-1. No dashboard do Supabase, vá em **Settings** > **Database**
-2. Na seção **Connection String**, copie a URL de conexão:
-   - Selecione o modo **URI**
-   - Copie a string que começa com `postgresql://`
-   - Substitua `[YOUR-PASSWORD]` pela senha que você criou
+1. Crie um projeto em [supabase.com](https://supabase.com)
+2. Vá em **Settings** > **Database** > **Connection String**
+3. Copie a **URI** (formato: `postgresql://postgres:...`)
+4. Vá em **Settings** > **API** e copie:
+   - `Project URL` (NEXT_PUBLIC_SUPABASE_URL)
+   - `anon public` key (NEXT_PUBLIC_SUPABASE_ANON_KEY)
 
-### 4. Configurar Variáveis de Ambiente
+### 3. Configure Variáveis de Ambiente
 
-1. Copie o arquivo de exemplo:
-   ```bash
-   cp .env.example .env
-   ```
+```bash
+cp .env.example .env
+```
 
-2. Edite o arquivo `.env` e cole sua DATABASE_URL:
-   ```env
-   DATABASE_URL="postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres"
-   ```
+Edite `.env` com suas credenciais:
 
-### 5. Instalar Dependências
+```env
+# Database
+DATABASE_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres"
+DIRECT_URL="postgresql://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres"
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT].supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
+```
+
+### 4. Instale Dependências
 
 ```bash
 npm install
 ```
 
-### 6. Criar Tabelas no Banco de Dados
+### 5. Configure o Banco de Dados
+
+Execute a migration SQL completa no **SQL Editor** do Supabase:
+
+```bash
+# O arquivo está em: supabase_complete_migration.sql
+```
+
+Ou use Prisma para criar as tabelas:
 
 ```bash
 npx prisma db push
 ```
 
-Este comando irá:
-- Conectar ao Supabase
-- Criar as tabelas: `patients`, `daily_notes`, `hourly_notes`
-- Gerar o Prisma Client
-
-### 7. Executar em Desenvolvimento
+### 6. Execute em Desenvolvimento
 
 ```bash
 npm run dev
 ```
 
-Acesse: [http://localhost:3000](http://localhost:3000)
+Acesse: **http://localhost:3000**
 
-## Estrutura do Banco de Dados
-
-### Modelo de Dados
+## 📁 Estrutura do Projeto
 
 ```
-Patient (Paciente)
-├── id: String (UUID)
-├── nome: String
-├── dataNascimento: DateTime (opcional)
-├── createdAt: DateTime
-└── dailyNotes: DailyNote[]
-
-DailyNote (Anotação Diária)
-├── id: String (UUID)
-├── data: DateTime
-├── horaDormiu: String (formato "HH:mm")
-├── horaAcordou: String (formato "HH:mm")
-├── humor: Int (1-5)
-├── detalhesExtras: Text
-├── patientId: String (FK)
-├── patient: Patient
-└── hourlyNotes: HourlyNote[]
-
-HourlyNote (Registro Horário)
-├── id: String (UUID)
-├── hora: String (formato "HH:mm")
-├── descricao: Text
-├── dailyNoteId: String (FK)
-└── dailyNote: DailyNote
+medical_annotations/
+├── app/                      # Next.js App Router
+│   ├── api/                  # API Routes
+│   │   ├── dashboard/        # Dashboard stats
+│   │   ├── notes/            # Daily notes CRUD
+│   │   ├── patients/         # Patients CRUD
+│   │   └── tags/             # Tags API (deprecated)
+│   ├── dashboard/            # Dashboard page
+│   ├── login/                # Authentication
+│   ├── patients/             # Patient management
+│   └── register/             # User registration
+├── components/               # React Components
+│   ├── layout/               # Layout components
+│   ├── notes/                # Note forms & views
+│   ├── patients/             # Patient components
+│   ├── pdf/                  # PDF export
+│   └── ui/                   # Reusable UI
+├── lib/                      # Utilities
+│   ├── dateUtils.ts          # Date helpers
+│   ├── pdf-export.ts         # PDF generation
+│   ├── prisma.ts             # Prisma client
+│   └── supabase/             # Supabase setup
+├── prisma/
+│   ├── schema.prisma         # Database schema
+│   └── seed.ts               # Seed data
+├── e2e/                      # E2E tests (Playwright)
+└── public/                   # Static assets
 ```
 
-## Comandos Úteis
+## 🗄 Database Schema
+
+```prisma
+model Patient {
+  id             String      @id @default(cuid())
+  userId         String      // Supabase user ID
+  nome           String
+  dataNascimento DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  dailyNotes     DailyNote[]
+
+  @@index([userId])
+  @@map("patients")
+}
+
+model DailyNote {
+  id             String       @id @default(cuid())
+  data           DateTime     @default(now())
+  horaDormiu     String?      // "22:30"
+  horaAcordou    String?      // "07:00"
+  humor          Int?         // 1-5
+  detalhesExtras String?      @db.Text
+  tags           String[]     @default([]) // Max 30 chars each
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  patientId      String
+  patient        Patient      @relation(...)
+  hourlyNotes    HourlyNote[]
+
+  @@index([patientId])
+  @@index([data])
+  @@map("daily_notes")
+}
+
+model HourlyNote {
+  id          String    @id @default(cuid())
+  hora        String    // "08:00"
+  descricao   String    @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  dailyNoteId String
+  dailyNote   DailyNote @relation(...)
+
+  @@index([dailyNoteId])
+  @@map("hourly_notes")
+}
+```
+
+### Row Level Security (RLS)
+
+Todas as tabelas possuem políticas RLS que garantem:
+- Usuários veem apenas seus próprios pacientes
+- Anotações são acessíveis apenas pelo dono do paciente
+- Registros horários seguem a mesma regra
+
+## 🧪 Testes
+
+### Unit Tests (Jest)
 
 ```bash
-# Desenvolvimento
-npm run dev
+npm test                    # Run all tests
+npm run test:watch          # Watch mode
+npm run test:coverage       # Coverage report
+```
 
-# Build de produção
+**Cobertura atual:** 80%+ em componentes críticos
+
+### E2E Tests (Playwright)
+
+```bash
+npm run test:e2e            # Run E2E tests
+npm run test:e2e:ui         # UI mode
+npm run test:e2e:headed     # Headed mode
+npm run test:e2e:debug      # Debug mode
+```
+
+**30 testes E2E** cobrindo fluxos principais.
+
+### CI/CD
+
+Todos os testes rodam automaticamente no GitHub Actions:
+- ✅ Unit tests
+- ✅ E2E tests
+- ✅ Build verification
+- ✅ TypeScript check
+
+## 🚢 Deploy
+
+### Vercel (Recomendado)
+
+1. Fork este repositório
+2. Conecte no [Vercel](https://vercel.com)
+3. Configure as **Environment Variables**
+4. Deploy automático a cada push
+
+### Build Manual
+
+```bash
 npm run build
 npm start
-
-# Prisma
-npx prisma studio          # Interface visual do banco
-npx prisma db push         # Aplicar mudanças no schema
-npx prisma generate        # Regenerar Prisma Client
-
-# Lint
-npm run lint
 ```
 
-## Fluxo de Uso
+## 📝 Comandos Úteis
 
-1. **Cadastrar Paciente**: Acesse a lista de pacientes e clique em "Novo"
-2. **Criar Anotação**: Na página do paciente, clique em "Nova Anotação"
-3. **Preencher Dados**:
-   - Selecione a data
-   - Informe horários de sono
-   - Escolha o humor (visual)
-   - Adicione detalhes extras
-4. **Registros por Hora**: Na página da anotação, adicione eventos que ocorreram em horários específicos
+```bash
+# Development
+npm run dev                 # Start dev server
+npm run build              # Production build
+npm start                  # Start production server
 
-## Design Mobile-First
+# Database
+npx prisma studio          # Visual database editor
+npx prisma db push         # Push schema changes
+npx prisma generate        # Regenerate client
+npx prisma migrate dev     # Create migration
 
-O sistema foi desenvolvido com foco em dispositivos móveis:
+# Testing
+npm test                   # Unit tests
+npm run test:e2e          # E2E tests
+npm run lint              # Lint code
 
-- Layout responsivo
-- Botões grandes e touch-friendly
-- Formulários otimizados para mobile
-- Interface limpa e intuitiva
-- Cores e ícones para facilitar visualização rápida
+# Seed
+npm run seed              # Seed database (if needed)
+```
 
-## Personalização
+## 🤝 Contribuindo
 
-### Escala de Humor
+Contribuições são bem-vindas! Por favor:
 
-Atualmente usa escala de 1-5 com emojis. Para alterar:
+1. Fork o projeto
+2. Crie uma branch: `git checkout -b feature/MinhaFeature`
+3. Commit: `git commit -m 'Add: MinhaFeature'`
+4. Push: `git push origin feature/MinhaFeature`
+5. Abra um Pull Request
 
-Edite: `components/notes/DailyNoteForm.tsx` e `app/patients/[id]/notes/[noteId]/page.tsx`
+### Guidelines
 
-### Campos Adicionais
+- Siga o padrão de código existente
+- Adicione testes para novas features
+- Atualize a documentação quando necessário
+- Use commits semânticos (feat, fix, docs, etc)
 
-Para adicionar novos campos:
+## 📄 Licença
 
-1. Atualize o schema Prisma em `prisma/schema.prisma`
-2. Execute `npx prisma db push`
-3. Atualize os formulários e páginas correspondentes
+Este projeto está sob a licença MIT. Veja [LICENSE](LICENSE) para mais detalhes.
 
-## Problemas Comuns
+## 🙏 Agradecimentos
 
-### Erro de conexão com banco
-- Verifique se a DATABASE_URL está correta
-- Confirme que o projeto Supabase está ativo
-- Teste a conexão: `npx prisma db push`
+- [Next.js](https://nextjs.org/)
+- [Supabase](https://supabase.com/)
+- [Vercel](https://vercel.com/)
+- [Prisma](https://www.prisma.io/)
 
-### Erro ao criar Prisma Client
-- Execute: `npx prisma generate`
-- Reinicie o servidor de desenvolvimento
+---
 
-## Licença
+**Desenvolvido com ❤️ para profissionais de saúde**
 
-MIT
-
-## Suporte
-
-Para dúvidas ou sugestões, abra uma issue no repositório.
+🤖 *Este projeto utiliza [Claude Code](https://claude.com/claude-code) para desenvolvimento assistido por IA*
