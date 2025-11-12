@@ -221,76 +221,83 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
     doc.setFillColor(255, 255, 255); // white
 
     const boxStartY = yPosition;
-    let boxHeight = 8;
+    let boxHeight = 10;
 
     // Calcular altura necessária
     if (note.horaAcordou || note.horaDormiu) boxHeight += 7;
     if (note.humor) boxHeight += 7;
     if (note.detalhesExtras) {
-      const detailsLines = doc.splitTextToSize(note.detalhesExtras, contentWidth - 10);
-      boxHeight += detailsLines.length * 5 + 7;
+      const detailsLines = doc.splitTextToSize(note.detalhesExtras, contentWidth - 12);
+      boxHeight += detailsLines.length * 5 + 8;
     }
     if (note.hourlyNotes.length > 0) {
-      boxHeight += note.hourlyNotes.length * 7 + 10;
+      note.hourlyNotes.forEach((hourly) => {
+        const hourlyLines = doc.splitTextToSize(`  ${hourly.hora} - ${hourly.descricao}`, contentWidth - 12);
+        boxHeight += hourlyLines.length * 4.5 + 2;
+      });
+      boxHeight += 5;
     }
 
     doc.roundedRect(margin, boxStartY, contentWidth, boxHeight, 1.5, 1.5, "FD");
 
-    yPosition += 4;
+    yPosition += 5;
 
-    // Horários de sono com ícones textuais
+    // Horários de sono
     if (note.horaAcordou || note.horaDormiu) {
       doc.setFontSize(10);
       doc.setTextColor(51, 65, 85);
       let sleepText = "";
-      if (note.horaAcordou) sleepText += `☀ Acordou: ${note.horaAcordou}`;
+      if (note.horaAcordou) sleepText += `Acordou: ${note.horaAcordou}`;
       if (note.horaAcordou && note.horaDormiu) sleepText += "  |  ";
-      if (note.horaDormiu) sleepText += `☾ Dormiu: ${note.horaDormiu}`;
-      doc.text(sleepText, margin + 4, yPosition);
+      if (note.horaDormiu) sleepText += `Dormiu: ${note.horaDormiu}`;
+      doc.text(sleepText, margin + 5, yPosition);
       yPosition += 7;
     }
 
-    // Humor com visual melhorado
+    // Humor
     if (note.humor) {
       doc.setFontSize(10);
       doc.setTextColor(51, 65, 85);
-      const humorEmojis = ["😢", "😟", "😐", "🙂", "😄"];
-      doc.text(`${humorEmojis[note.humor - 1]} Humor: ${humorLabels[note.humor - 1]} (${note.humor}/5)`, margin + 4, yPosition);
+      doc.text(`Humor: ${humorLabels[note.humor - 1]} (${note.humor}/5)`, margin + 5, yPosition);
       yPosition += 7;
     }
 
     // Detalhes extras
     if (note.detalhesExtras) {
-      doc.setFontSize(9);
-      doc.setTextColor(30, 58, 138); // blue-900
-      doc.text("Detalhes:", margin + 4, yPosition);
-      yPosition += 4;
-
       doc.setFontSize(10);
-      doc.setTextColor(71, 85, 105); // slate-600
+      doc.setTextColor(30, 58, 138); // blue-900
+      doc.setFont(undefined, "bold");
+      doc.text("Detalhes:", margin + 5, yPosition);
+      yPosition += 5;
+
+      doc.setFont(undefined, "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(51, 65, 85); // slate-700
       const detailsLines = doc.splitTextToSize(note.detalhesExtras, contentWidth - 12);
       detailsLines.forEach((line: string) => {
-        doc.text(line, margin + 4, yPosition);
-        yPosition += 4.5;
+        doc.text(line, margin + 5, yPosition);
+        yPosition += 5;
       });
-      yPosition += 2;
+      yPosition += 3;
     }
 
     // Registros horários
     if (note.hourlyNotes.length > 0) {
-      doc.setFontSize(9);
+      doc.setFontSize(10);
       doc.setTextColor(30, 58, 138); // blue-900
-      doc.text(`⏰ Registros Horários (${note.hourlyNotes.length}):`, margin + 4, yPosition);
-      yPosition += 4;
+      doc.setFont(undefined, "bold");
+      doc.text(`Registros Horarios (${note.hourlyNotes.length}):`, margin + 5, yPosition);
+      yPosition += 5;
 
+      doc.setFont(undefined, "normal");
       note.hourlyNotes.forEach((hourly) => {
         doc.setFontSize(9);
-        doc.setTextColor(71, 85, 105);
-        const hourlyText = `    • ${hourly.hora} - ${hourly.descricao}`;
-        const hourlyLines = doc.splitTextToSize(hourlyText, contentWidth - 16);
+        doc.setTextColor(51, 65, 85);
+        const hourlyText = `  ${hourly.hora} - ${hourly.descricao}`;
+        const hourlyLines = doc.splitTextToSize(hourlyText, contentWidth - 12);
         hourlyLines.forEach((line: string) => {
-          doc.text(line, margin + 4, yPosition);
-          yPosition += 4;
+          doc.text(line, margin + 5, yPosition);
+          yPosition += 4.5;
         });
         yPosition += 2;
       });
