@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { X, Calendar, Loader2, Sparkles, Download } from "lucide-react";
+import { X, Calendar, Loader2, Sparkles, Download, Eye, Edit2 } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface AIResumoDialogProps {
   patientId: string;
@@ -16,6 +18,7 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notesCount, setNotesCount] = useState<number>(0);
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleGenerateResumo = async () => {
     setLoading(true);
@@ -57,17 +60,302 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
     }
   };
 
-  const handleDownloadResumo = () => {
-    if (resumo) {
-      const blob = new Blob([resumo], { type: "text/markdown" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `resumo_${patientName.replace(/\s+/g, "_")}_${new Date().toISOString().split('T')[0]}.md`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+
+  const handleDownloadPDF = async () => {
+    if (!resumo) return;
+
+    try {
+      // Importar bibliotecas dinamicamente
+      const { default: jsPDF } = await import("jspdf");
+      const autoTable = (await import("jspdf-autotable")).default;
+
+      const doc = new jsPDF() as any;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 15;
+      const contentWidth = pageWidth - (margin * 2);
+      let yPosition = margin;
+
+      // Função auxiliar para adicionar texto com quebra de linha
+      const addText = (text: string, fontSize: number, isBold: boolean, color: number[] = [0, 0, 0]) => {
+        doc.setFontSize(fontSize);
+        doc.setFont(undefined, isBold ? 'bold' : 'normal');
+        doc.setTextColor(...color);
+
+        const lines = doc.splitTextToSize(text, contentWidth);
+
+        lines.forEach((line: string, index: number) => {
+          if (yPosition > 270) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          doc.text(line, margin, yPosition);
+          yPosition += fontSize * 0.4;
+        });
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFont(undefined, 'normal');
+      };
+
+      // Processar markdown linha por linha
+      const lines = resumo.split('\n');
+      let inTable = false;
+      let tableData: string[][] = [];
+      let tableHeaders: string[] = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+
+        // Pular linhas vazias
+        if (!line) {
+          yPosition += 3;
+          continue;
+        }
+
+        // Detectar início de tabela
+        if (line.startsWith('|') && !inTable) {
+          inTable = true;
+          tableHeaders = line.split('|').map(c => c.trim()).filter(c => c && c !== '---' && !c.includes(':---'));
+          continue;
+        }
+
+        // Linha de separação da tabela
+        if (line.includes('|') && line.includes(':---')) {
+          continue;
+        }
+
+        // Processar linhas da tabela
+        if (inTable && line.startsWith('|')) {
+          const cells = line.split('|').map(c => c.trim().replace(/\*\*/g, '')).filter(c => c);
+          if (cells.length > 0) {
+            tableData.push(cells);
+          }
+          continue;
+        }
+
+        // Fim da tabela - renderizar
+        if (inTable && !line.startsWith('|')) {
+          if (tableData.length > 0) {
+            autoTable(doc, {
+              startY: yPosition,
+              head: tableHeaders.length > 0 ? [tableHeaders] : undefined,
+              body: tableData,
+              theme: 'grid',
+              styles: {
+                fontSize: 9,
+                cellPadding: 3,
+                textColor: [0, 0, 0],
+              },
+              headStyles: {
+                fillColor: [139, 92, 246],
+                textColor: [255, 255, 255],
+                fontStyle: 'bold',
+              },
+              alternateRowStyles: {
+                fillColor: [245, 245, 245],
+              },
+              margin: { left: margin, right: margin },
+            });
+            yPosition = doc.lastAutoTable.finalY + 5;
+          }
+          inTable = false;
+          tableData = [];
+          tableHeaders = [];
+        }
+
+        // Headers H2 (##)
+        if (line.startsWith('## ')) {
+          if (yPosition > 250) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          const text = line.replace(/^## /, '');
+          addText(text, 16, true, [139, 92, 246]);
+          yPosition += 5;
+          continue;
+        }
+
+        // Headers H3 (###)
+        if (line.startsWith('### ')) {
+          if (yPosition > 255) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          const text = line.replace(/^### /, '');
+          addText(text, 13, true, [167, 139, 250]);
+          yPosition += 3;
+          continue;
+        }
+
+        // Headers H4 (####)
+        if (line.startsWith('#### ')) {
+          if (yPosition > 260) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          const text = line.replace(/^#### /, '').replace(/\*\*/g, '');
+          addText(text, 11, true, [50, 50, 50]);
+          yPosition += 2;
+          continue;
+        }
+
+        // Texto que é só bold (ex: **03/11**) - tratar como sub-heading
+        if (/^\*\*[^*]+\*\*$/.test(line)) {
+          if (yPosition > 260) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          const text = line.replace(/\*\*/g, '');
+          doc.setFontSize(11);
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(50, 50, 50);
+          doc.text(text, margin, yPosition);
+          yPosition += 7;
+          doc.setFont(undefined, 'normal');
+          doc.setTextColor(0, 0, 0);
+          continue;
+        }
+
+        // Linha horizontal (---)
+        if (line === '---') {
+          if (yPosition > 265) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          doc.setDrawColor(200, 200, 200);
+          doc.line(margin, yPosition, pageWidth - margin, yPosition);
+          yPosition += 5;
+          continue;
+        }
+
+        // Bullet points
+        if (line.startsWith('* ') || line.startsWith('- ')) {
+          if (yPosition > 260) {
+            doc.addPage();
+            yPosition = margin;
+          }
+
+          const text = line.replace(/^[*-] /, '');
+
+          // Processar bold
+          const segments = text.split(/(\*\*[^*]+\*\*)/g);
+          doc.setFontSize(10);
+          let xPos = margin + 4;
+
+          doc.text('•', margin, yPosition);
+
+          segments.forEach(segment => {
+            if (segment.startsWith('**') && segment.endsWith('**')) {
+              const boldText = segment.replace(/\*\*/g, '');
+              doc.setFont(undefined, 'bold');
+              const lines = doc.splitTextToSize(boldText, contentWidth - 8);
+              lines.forEach((line: string, idx: number) => {
+                if (idx > 0) {
+                  yPosition += 5;
+                  if (yPosition > 270) {
+                    doc.addPage();
+                    yPosition = margin;
+                  }
+                  xPos = margin + 4;
+                }
+                doc.text(line, xPos, yPosition);
+                xPos += doc.getTextWidth(line);
+              });
+              doc.setFont(undefined, 'normal');
+            } else if (segment) {
+              const lines = doc.splitTextToSize(segment, contentWidth - 8);
+              lines.forEach((line: string, idx: number) => {
+                if (idx > 0) {
+                  yPosition += 5;
+                  if (yPosition > 270) {
+                    doc.addPage();
+                    yPosition = margin;
+                  }
+                  xPos = margin + 4;
+                }
+                doc.text(line, xPos, yPosition);
+                xPos += doc.getTextWidth(line);
+              });
+            }
+          });
+
+          yPosition += 6;
+          continue;
+        }
+
+        // Texto normal com suporte a bold
+        if (yPosition > 260) {
+          doc.addPage();
+          yPosition = margin;
+        }
+
+        doc.setFontSize(10);
+        const segments = line.split(/(\*\*[^*]+\*\*)/g);
+        let xPos = margin;
+
+        segments.forEach(segment => {
+          if (segment.startsWith('**') && segment.endsWith('**')) {
+            const boldText = segment.replace(/\*\*/g, '');
+            doc.setFont(undefined, 'bold');
+            const lines = doc.splitTextToSize(boldText, contentWidth);
+            lines.forEach((line: string, idx: number) => {
+              if (idx > 0) {
+                yPosition += 5;
+                if (yPosition > 270) {
+                  doc.addPage();
+                  yPosition = margin;
+                }
+                xPos = margin;
+              }
+              doc.text(line, xPos, yPosition);
+              xPos += doc.getTextWidth(line);
+            });
+            doc.setFont(undefined, 'normal');
+          } else if (segment) {
+            const lines = doc.splitTextToSize(segment, contentWidth);
+            lines.forEach((line: string, idx: number) => {
+              if (idx > 0) {
+                yPosition += 5;
+                if (yPosition > 270) {
+                  doc.addPage();
+                  yPosition = margin;
+                }
+                xPos = margin;
+              }
+              doc.text(line, xPos, yPosition);
+              xPos += doc.getTextWidth(line);
+            });
+          }
+        });
+
+        yPosition += 5;
+      }
+
+      // Renderizar tabela final se houver
+      if (inTable && tableData.length > 0) {
+        autoTable(doc, {
+          startY: yPosition,
+          head: tableHeaders.length > 0 ? [tableHeaders] : undefined,
+          body: tableData,
+          theme: 'grid',
+          styles: {
+            fontSize: 9,
+            cellPadding: 3,
+          },
+          headStyles: {
+            fillColor: [139, 92, 246],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+          },
+          margin: { left: margin, right: margin },
+        });
+      }
+
+      // Salvar PDF
+      const fileName = `resumo_${patientName.replace(/\s+/g, "_")}_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      setError("Erro ao gerar PDF. Tente novamente.");
     }
   };
 
@@ -178,11 +466,38 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
           {/* Resumo */}
           {resumo && !loading && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              {/* Toolbar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <p className="text-sm text-slate-400">
                   Resumo gerado com base em {notesCount} anotaç{notesCount === 1 ? "ão" : "ões"}
                 </p>
                 <div className="flex gap-2">
+                  {/* Toggle View/Edit */}
+                  <div className="flex items-center rounded-lg bg-slate-700 p-1">
+                    <button
+                      onClick={() => setIsEditing(false)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition-colors ${
+                        !isEditing
+                          ? "bg-slate-600 text-white"
+                          : "text-slate-300 hover:text-white"
+                      }`}
+                    >
+                      <Eye size={16} />
+                      <span className="hidden sm:inline">Visualizar</span>
+                    </button>
+                    <button
+                      onClick={() => setIsEditing(true)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition-colors ${
+                        isEditing
+                          ? "bg-slate-600 text-white"
+                          : "text-slate-300 hover:text-white"
+                      }`}
+                    >
+                      <Edit2 size={16} />
+                      <span className="hidden sm:inline">Editar</span>
+                    </button>
+                  </div>
+
                   <button
                     onClick={handleCopyResumo}
                     className="px-3 py-1.5 text-sm bg-slate-700 text-slate-200 rounded hover:bg-slate-600 transition-colors"
@@ -190,31 +505,124 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
                     Copiar
                   </button>
                   <button
-                    onClick={handleDownloadResumo}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-slate-700 text-slate-200 rounded hover:bg-slate-600 transition-colors"
+                    onClick={handleDownloadPDF}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
                   >
                     <Download size={16} />
-                    Baixar
+                    <span className="hidden sm:inline">Baixar</span> PDF
                   </button>
                 </div>
               </div>
 
-              <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 max-h-[500px] overflow-y-auto">
-                <div className="prose prose-invert max-w-none">
-                  <div
-                    className="text-slate-200 whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{
-                      __html: resumo
-                        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\*(.+?)\*/g, '<em>$1</em>')
-                        .replace(/^#{1} (.+)$/gm, '<h1 class="text-2xl font-bold mt-6 mb-3 text-purple-300">$1</h1>')
-                        .replace(/^#{2} (.+)$/gm, '<h2 class="text-xl font-bold mt-5 mb-2 text-purple-400">$1</h2>')
-                        .replace(/^#{3} (.+)$/gm, '<h3 class="text-lg font-bold mt-4 mb-2 text-purple-400">$1</h3>')
-                        .replace(/^- (.+)$/gm, '<li class="ml-4 mb-1">$1</li>')
-                        .replace(/\n\n/g, '<br/><br/>')
-                    }}
+              {/* Content Area */}
+              <div className="bg-slate-900 border border-slate-700 rounded-lg overflow-hidden">
+                {isEditing ? (
+                  // Editor Mode
+                  <textarea
+                    value={resumo}
+                    onChange={(e) => setResumo(e.target.value)}
+                    className="w-full h-[500px] p-6 bg-slate-900 text-slate-200 font-mono text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-inset"
+                    placeholder="Edite o markdown aqui..."
                   />
-                </div>
+                ) : (
+                  // Preview Mode
+                  <div className="p-6 max-h-[500px] overflow-y-auto">
+                    <div className="prose prose-invert prose-purple max-w-none">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          h1: ({ children }) => (
+                            <h1 className="text-2xl font-bold mt-6 mb-3 text-purple-300 border-b border-purple-800 pb-2">
+                              {children}
+                            </h1>
+                          ),
+                          h2: ({ children }) => (
+                            <h2 className="text-xl font-bold mt-5 mb-2 text-purple-400">
+                              {children}
+                            </h2>
+                          ),
+                          h3: ({ children }) => (
+                            <h3 className="text-lg font-bold mt-4 mb-2 text-purple-400">
+                              {children}
+                            </h3>
+                          ),
+                          h4: ({ children }) => (
+                            <h4 className="text-base font-bold mt-3 mb-1.5 text-purple-400">
+                              {children}
+                            </h4>
+                          ),
+                          p: ({ children }) => (
+                            <p className="text-slate-200 mb-3 leading-relaxed">
+                              {children}
+                            </p>
+                          ),
+                          strong: ({ children }) => (
+                            <strong className="font-bold text-slate-100">
+                              {children}
+                            </strong>
+                          ),
+                          ul: ({ children }) => (
+                            <ul className="list-none space-y-1.5 mb-3 ml-0">
+                              {children}
+                            </ul>
+                          ),
+                          ol: ({ children }) => (
+                            <ol className="list-decimal space-y-1.5 mb-3 ml-6">
+                              {children}
+                            </ol>
+                          ),
+                          li: ({ children }) => (
+                            <li className="text-slate-200 pl-1 before:content-['•'] before:mr-2 before:text-purple-400">
+                              {children}
+                            </li>
+                          ),
+                          table: ({ children }) => (
+                            <div className="overflow-x-auto mb-4">
+                              <table className="min-w-full border-collapse border border-slate-700">
+                                {children}
+                              </table>
+                            </div>
+                          ),
+                          thead: ({ children }) => (
+                            <thead className="bg-slate-800">
+                              {children}
+                            </thead>
+                          ),
+                          th: ({ children }) => (
+                            <th className="border border-slate-700 px-4 py-2 text-left font-bold text-purple-300">
+                              {children}
+                            </th>
+                          ),
+                          td: ({ children }) => (
+                            <td className="border border-slate-700 px-4 py-2 text-slate-200">
+                              {children}
+                            </td>
+                          ),
+                          hr: () => (
+                            <hr className="my-6 border-slate-700" />
+                          ),
+                          blockquote: ({ children }) => (
+                            <blockquote className="border-l-4 border-purple-500 pl-4 py-2 my-4 italic text-slate-300 bg-slate-800/50">
+                              {children}
+                            </blockquote>
+                          ),
+                          code: ({ inline, children }: any) =>
+                            inline ? (
+                              <code className="bg-slate-800 text-purple-300 px-1.5 py-0.5 rounded text-sm font-mono">
+                                {children}
+                              </code>
+                            ) : (
+                              <code className="block bg-slate-800 text-slate-200 p-4 rounded my-3 text-sm font-mono overflow-x-auto">
+                                {children}
+                              </code>
+                            )
+                        }}
+                      >
+                        {resumo}
+                      </ReactMarkdown>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
