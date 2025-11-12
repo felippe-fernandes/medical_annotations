@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { patientId, startDate, endDate } = body;
+    const { patientId, startDate, endDate, tags } = body;
 
     if (!patientId) {
       return NextResponse.json(
@@ -26,6 +26,14 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Construir filtros para a query
+    const dateFilter = startDate && endDate ? {
+      data: {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      }
+    } : {};
 
     // Verificar se o paciente pertence ao usuário
     const patient = await prisma.patient.findFirst({
@@ -35,14 +43,7 @@ export async function POST(request: Request) {
       },
       include: {
         dailyNotes: {
-          where: {
-            ...(startDate && endDate ? {
-              data: {
-                gte: new Date(startDate),
-                lte: new Date(endDate)
-              }
-            } : {})
-          },
+          where: dateFilter,
           orderBy: { data: 'desc' },
           include: {
             hourlyNotes: {
@@ -60,9 +61,18 @@ export async function POST(request: Request) {
       );
     }
 
-    if (patient.dailyNotes.length === 0) {
+    // Filtrar notas por tags (se especificado)
+    let filteredNotes = patient.dailyNotes;
+    if (tags && Array.isArray(tags) && tags.length > 0) {
+      filteredNotes = filteredNotes.filter((note: any) => {
+        // Incluir a nota se ela tiver pelo menos uma das tags selecionadas
+        return note.tags.some((tag: string) => tags.includes(tag));
+      });
+    }
+
+    if (filteredNotes.length === 0) {
       return NextResponse.json(
-        { error: "Nenhuma anotação encontrada para o período selecionado" },
+        { error: "Nenhuma anotação encontrada para os filtros selecionados" },
         { status: 400 }
       );
     }
@@ -75,8 +85,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Preparar dados para a IA com sanitização
-    const notesData = patient.dailyNotes.map((note: any) => ({
+    // Preparar dados para a IA com sanitização (usando notas filtradas)
+    const notesData = filteredNotes.map((note: any) => ({
       data: note.data.toISOString().split('T')[0],
       horaDormiu: note.horaDormiu,
       horaAcordou: note.horaAcordou,
@@ -172,11 +182,14 @@ Gere o relatório completo seguindo o formato acima, sendo fiel às informaçõe
     return NextResponse.json({
       resumo,
       patientName: patient.nome,
-      notesCount: patient.dailyNotes.length,
+      notesCount: filteredNotes.length,
       period: startDate && endDate ? {
         start: startDate,
         end: endDate
-      } : null
+      } : null,
+      filters: {
+        tags: tags && tags.length > 0 ? tags : null
+      }
     });
 
   } catch (error) {

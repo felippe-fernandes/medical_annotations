@@ -8,6 +8,7 @@ import type { DailyNote, PatientData } from "@/lib/types";
 export interface PDFExportOptions {
   startDate?: Date;
   endDate?: Date;
+  tags?: string[];
 }
 
 const humorLabels = ["Muito Ruim", "Ruim", "Neutro", "Bom", "Muito Bom"];
@@ -51,7 +52,7 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
 
   yPosition = 45;
 
-  // Filtrar notas por data
+  // Filtrar notas por data e tags
   let filteredNotes = [...patient.dailyNotes];
 
   if (options.startDate && options.endDate) {
@@ -64,6 +65,14 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
 
       // Incluir se a nota está entre o início e fim (inclusive)
       return noteStartOfDay >= filterStart && noteStartOfDay <= filterEnd;
+    });
+  }
+
+  // Filtrar por tags (se houver)
+  if (options.tags && options.tags.length > 0) {
+    filteredNotes = filteredNotes.filter((note) => {
+      // Incluir a nota se ela tiver pelo menos uma das tags selecionadas
+      return note.tags.some((tag) => options.tags!.includes(tag));
     });
   }
 
@@ -92,13 +101,22 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
   yPosition += 7;
   doc.text(`Total de Anotações: ${filteredNotes.length}`, margin + 5, yPosition);
 
-  // Informações de filtro
+  // Informações de filtro de data
   if (options.startDate && options.endDate) {
     yPosition += 6;
     doc.setFontSize(10);
     doc.setTextColor(100, 116, 139); // slate-500
     const dateRange = `Período filtrado: ${format(options.startDate, "dd/MM/yyyy")} até ${format(options.endDate, "dd/MM/yyyy")}`;
     doc.text(dateRange, margin + 5, yPosition);
+  }
+
+  // Informações de filtro de tags
+  if (options.tags && options.tags.length > 0) {
+    yPosition += 6;
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139); // slate-500
+    const tagsFilter = `Tags filtradas: ${options.tags.join(", ")}`;
+    doc.text(tagsFilter, margin + 5, yPosition);
   }
 
   yPosition += cardHeight - (patient.dataNascimento ? 23 : 16);
