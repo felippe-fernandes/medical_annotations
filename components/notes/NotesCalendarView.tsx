@@ -2,7 +2,7 @@
 
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sun, Moon } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -47,6 +47,30 @@ function parseLocalDate(date: Date | string): Date {
   }
 
   return new Date(date);
+}
+
+// Helper para calcular informações do dia
+function getDayInfo(notes: DailyNote[]) {
+  if (notes.length === 0) return null;
+
+  // Calcular humor médio
+  const humoresValidos = notes.filter(n => n.humor !== null).map(n => n.humor!);
+  const humorMedio = humoresValidos.length > 0
+    ? Math.round(humoresValidos.reduce((sum, h) => sum + h, 0) / humoresValidos.length)
+    : null;
+
+  // Pegar horários de sono (primeira nota com horários)
+  const notaComSono = notes.find(n => n.horaAcordou || n.horaDormiu);
+  const horaAcordou = notaComSono?.horaAcordou;
+  const horaDormiu = notaComSono?.horaDormiu;
+
+  return { humorMedio, horaAcordou, horaDormiu };
+}
+
+// Emoji de humor baseado no valor
+function getHumorEmoji(humor: number): string {
+  const emojis = ["😢", "😟", "😐", "🙂", "😄"];
+  return emojis[humor - 1] || "😐";
 }
 
 export function NotesCalendarView({ patientId, dailyNotes }: NotesCalendarViewProps) {
@@ -145,6 +169,7 @@ export function NotesCalendarView({ patientId, dailyNotes }: NotesCalendarViewPr
             const dayNotes = notesByDate.get(dateKey) || [];
             const isCurrentMonth = isSameMonth(day, currentMonth);
             const isToday = isSameDay(day, today);
+            const dayInfo = getDayInfo(dayNotes);
 
             return (
               <div
@@ -166,20 +191,44 @@ export function NotesCalendarView({ patientId, dailyNotes }: NotesCalendarViewPr
                   {format(day, "d")}
                 </time>
 
-                {dayNotes.length > 0 && (
+                {dayNotes.length > 0 && dayInfo && (
                   <div className="mt-1 space-y-1">
-                    {dayNotes.slice(0, 3).map((note) => (
+                    {/* Humor médio */}
+                    {dayInfo.humorMedio && (
                       <Link
-                        key={note.id}
-                        href={`/patients/${patientId}/notes/${note.id}`}
-                        className="block truncate rounded px-1.5 py-0.5 text-xs font-medium bg-blue-600 text-white hover:bg-blue-500 transition-colors"
+                        href={`/patients/${patientId}/notes/${dayNotes[0].id}`}
+                        className="block rounded px-1.5 py-0.5 text-xs font-medium bg-purple-600 text-white hover:bg-purple-500 transition-colors"
                       >
-                        {note.tags.length > 0 ? note.tags[0] : "Anotação"}
+                        <span className="mr-1">{getHumorEmoji(dayInfo.humorMedio)}</span>
+                        Humor: {dayInfo.humorMedio}/5
                       </Link>
-                    ))}
-                    {dayNotes.length > 3 && (
+                    )}
+
+                    {/* Horários de sono */}
+                    {(dayInfo.horaAcordou || dayInfo.horaDormiu) && (
+                      <Link
+                        href={`/patients/${patientId}/notes/${dayNotes[0].id}`}
+                        className="block rounded px-1.5 py-0.5 text-xs font-medium bg-indigo-600 text-white hover:bg-indigo-500 transition-colors"
+                      >
+                        {dayInfo.horaAcordou && (
+                          <div className="flex items-center gap-1 truncate">
+                            <Sun size={12} className="text-amber-300 flex-shrink-0" />
+                            <span>{dayInfo.horaAcordou}</span>
+                          </div>
+                        )}
+                        {dayInfo.horaDormiu && (
+                          <div className="flex items-center gap-1 truncate">
+                            <Moon size={12} className="text-blue-200 flex-shrink-0" />
+                            <span>{dayInfo.horaDormiu}</span>
+                          </div>
+                        )}
+                      </Link>
+                    )}
+
+                    {/* Indicador de múltiplas notas */}
+                    {dayNotes.length > 1 && (
                       <div className="text-xs text-slate-400 px-1.5">
-                        +{dayNotes.length - 3} mais
+                        {dayNotes.length} anotações
                       </div>
                     )}
                   </div>

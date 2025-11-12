@@ -59,12 +59,13 @@ function parseLocalDate(date: Date | string): Date {
 }
 
 export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps) {
+  const today = startOfDay(new Date());
+  const currentMonthKey = format(today, "yyyy-MM");
+
   const [searchText, setSearchText] = useState("");
   const [selectedTag, setSelectedTag] = useState("");
-  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set(["current"]));
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set([currentMonthKey]));
   const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
-
-  const today = startOfDay(new Date());
 
   // Extrair todas as tags únicas
   const allTags = useMemo(() => {
