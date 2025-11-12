@@ -154,6 +154,9 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
     // Card para cada nota - começar desenhando a borda externa
     const noteDate = parseDateToLocal(note.data);
 
+    // Verificar se a anotação está incompleta (falta hora de dormir OU acordar)
+    const isIncomplete = !note.horaDormiu || !note.horaAcordou;
+
     // Calcular altura total do card primeiro
     let totalCardHeight = 13; // header height
 
@@ -187,14 +190,22 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
 
     const cardStartY = yPosition;
 
-    // Desenhar borda externa do card
-    doc.setDrawColor(203, 213, 225); // slate-300
+    // Desenhar borda externa do card (laranja se incompleto, cinza se completo)
+    if (isIncomplete) {
+      doc.setDrawColor(251, 191, 36); // amber-400 - para anotações incompletas
+    } else {
+      doc.setDrawColor(203, 213, 225); // slate-300 - para anotações completas
+    }
     doc.setLineWidth(0.5);
     doc.roundedRect(margin, cardStartY, contentWidth, totalCardHeight, 2, 2, "S");
     doc.setLineWidth(0.2);
 
-    // Cabeçalho da nota com fundo cinza
-    doc.setFillColor(241, 245, 249); // slate-100
+    // Cabeçalho da nota com fundo cinza (ou laranja claro se incompleta)
+    if (isIncomplete) {
+      doc.setFillColor(254, 243, 199); // amber-100 - para anotações incompletas
+    } else {
+      doc.setFillColor(241, 245, 249); // slate-100 - para anotações completas
+    }
     doc.setDrawColor(203, 213, 225); // slate-300
     doc.rect(margin, cardStartY, contentWidth, 11, "F");
 
