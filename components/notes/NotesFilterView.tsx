@@ -2,9 +2,10 @@
 
 import { format, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronDown, ChevronRight, Moon, Search, Sun, Tag, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Moon, Search, Sun, Tag, X, List, Calendar } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { NotesCalendarView } from "./NotesCalendarView";
 
 interface HourlyNote {
   hora: string;
@@ -61,6 +62,7 @@ export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps)
   const [searchText, setSearchText] = useState("");
   const [selectedTag, setSelectedTag] = useState("");
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set(["current"]));
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
 
   const today = startOfDay(new Date());
 
@@ -158,8 +160,38 @@ export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps)
 
   return (
     <div className="space-y-4">
-      {/* Filtros */}
-      <div className="bg-slate-800 rounded-lg shadow p-4 space-y-3">
+      {/* Barra de visualização */}
+      <div className="flex items-center justify-between bg-slate-800 rounded-lg shadow px-4 py-3">
+        <h3 className="text-sm font-medium text-slate-300">Visualização</h3>
+        <div className="flex items-center rounded-lg bg-slate-700 p-1">
+          <button
+            onClick={() => setViewMode("list")}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              viewMode === "list"
+                ? "bg-slate-800 text-slate-100"
+                : "text-slate-400 hover:text-slate-100"
+            }`}
+          >
+            <List size={16} />
+            <span className="hidden sm:inline">Lista</span>
+          </button>
+          <button
+            onClick={() => setViewMode("calendar")}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              viewMode === "calendar"
+                ? "bg-slate-800 text-slate-100"
+                : "text-slate-400 hover:text-slate-100"
+            }`}
+          >
+            <Calendar size={16} />
+            <span className="hidden sm:inline">Calendário</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Filtros - apenas para listagem */}
+      {viewMode === "list" && (
+        <div className="bg-slate-800 rounded-lg shadow p-4 space-y-3">
         {/* Busca de texto */}
         <div className="relative">
           <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -216,10 +248,16 @@ export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps)
         <div className="text-sm text-slate-400 text-center">
           {filteredNotes.length} {filteredNotes.length === 1 ? "anotação encontrada" : "anotações encontradas"}
         </div>
-      </div>
+        </div>
+      )}
 
-      {/* Controles de expansão */}
-      {notesByMonth.length > 1 && (
+      {/* Visualização de calendário */}
+      {viewMode === "calendar" && (
+        <NotesCalendarView patientId={patientId} dailyNotes={dailyNotes} />
+      )}
+
+      {/* Controles de expansão - apenas para listagem */}
+      {viewMode === "list" && notesByMonth.length > 1 && (
         <div className="flex gap-2">
           <button
             onClick={expandAll}
@@ -236,8 +274,8 @@ export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps)
         </div>
       )}
 
-      {/* Lista de anotações agrupadas por mês */}
-      {filteredNotes.length === 0 ? (
+      {/* Lista de anotações agrupadas por mês - apenas para listagem */}
+      {viewMode === "list" && filteredNotes.length === 0 ? (
         <div className="bg-slate-800 rounded-lg shadow p-8 text-center">
           <p className="text-slate-500 mb-2">
             {hasActiveFilters ? "Nenhuma anotação encontrada" : "Nenhuma anotação ainda"}
@@ -246,7 +284,7 @@ export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps)
             <p className="text-slate-400 text-sm">Tente ajustar os filtros</p>
           )}
         </div>
-      ) : (
+      ) : viewMode === "list" ? (
         <div className="space-y-3">
           {notesByMonth.map(({ monthKey, monthLabel, notes }) => {
             const isExpanded = expandedMonths.has(monthKey);
@@ -366,7 +404,7 @@ export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps)
             );
           })}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
