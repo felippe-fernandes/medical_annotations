@@ -8,7 +8,6 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Modelo de Paciente
 model Patient {
   id             String      @id @default(cuid())
   userId         String
@@ -22,20 +21,17 @@ model Patient {
   @@map("patients")
 }
 
-// Modelo de Anotação Diária
 model DailyNote {
   id             String       @id @default(cuid())
   data           DateTime     @default(now())
-  horaDormiu     String?      // Formato: "22:30"
-  horaAcordou    String?      // Formato: "07:00"
-  humor          Int?         // Escala de 1 a 5
-  detalhesExtras String?      @db.Text
-  tags           String[]     @default([]) // Array de strings com as tags (máx 30 caracteres cada)
+  horaDormiu     String?
+  horaAcordou    String?
+  humor          Int?
+  detalhesExtras String?
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
-
-  // Relações
   patientId      String
+  tags           String[]     @default([])
   patient        Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
   hourlyNotes    HourlyNote[]
 
@@ -44,15 +40,12 @@ model DailyNote {
   @@map("daily_notes")
 }
 
-// Modelo de Anotação por Hora
 model HourlyNote {
   id          String    @id @default(cuid())
-  hora        String    // Formato: "08:00", "14:30"
-  descricao   String    @db.Text
+  hora        String
+  descricao   String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
-  // Relações
   dailyNoteId String
   dailyNote   DailyNote @relation(fields: [dailyNoteId], references: [id], onDelete: Cascade)
 
