@@ -1,52 +1,11 @@
 import { jsPDF } from "jspdf";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { parseDateToLocal } from "@/lib/dateUtils";
+import { sanitizeFileName } from "@/lib/utils/security";
+import type { DailyNote, PatientData } from "@/lib/types";
 
-// Função helper para parsear datas evitando problemas de timezone
-function parseLocalDate(date: Date | string): Date {
-  if (date instanceof Date && !isNaN(date.getTime())) {
-    // Extrair componentes UTC e criar data local
-    const year = date.getUTCFullYear();
-    const month = date.getUTCMonth();
-    const day = date.getUTCDate();
-    return new Date(year, month, day);
-  }
-
-  const dateStr = date.toString();
-  if (dateStr.includes('-') && dateStr.includes('T')) {
-    const [datePart] = dateStr.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  } else if (dateStr.includes('-')) {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  }
-
-  return new Date(date);
-}
-
-interface HourlyNote {
-  hora: string;
-  descricao: string;
-}
-
-interface DailyNote {
-  data: Date;
-  horaDormiu: string | null;
-  horaAcordou: string | null;
-  humor: number | null;
-  detalhesExtras: string | null;
-  tags: string[];
-  hourlyNotes: HourlyNote[];
-}
-
-interface PatientData {
-  nome: string;
-  dataNascimento: Date | null;
-  dailyNotes: DailyNote[];
-}
-
-interface PDFExportOptions {
+export interface PDFExportOptions {
   startDate?: Date;
   endDate?: Date;
 }
@@ -100,7 +59,7 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
     const filterEnd = endOfDay(options.endDate);
 
     filteredNotes = filteredNotes.filter((note) => {
-      const noteDate = parseLocalDate(note.data);
+      const noteDate = parseDateToLocal(note.data);
       const noteStartOfDay = startOfDay(noteDate);
 
       // Incluir se a nota está entre o início e fim (inclusive)
@@ -161,8 +120,8 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
 
   // Ordenar notas por data (mais recente primeiro) e remover duplicatas
   const uniqueNotes = filteredNotes.reduce((acc, note) => {
-    const noteTime = parseLocalDate(note.data).getTime();
-    const exists = acc.some(n => parseLocalDate(n.data).getTime() === noteTime);
+    const noteTime = parseDateToLocal(note.data).getTime();
+    const exists = acc.some(n => parseDateToLocal(n.data).getTime() === noteTime);
     if (!exists) {
       acc.push(note);
     }
@@ -170,12 +129,12 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
   }, [] as DailyNote[]);
 
   const sortedNotes = uniqueNotes.sort(
-    (a, b) => parseLocalDate(b.data).getTime() - parseLocalDate(a.data).getTime()
+    (a, b) => parseDateToLocal(b.data).getTime() - parseDateToLocal(a.data).getTime()
   );
 
   sortedNotes.forEach((note, index) => {
     // Card para cada nota - começar desenhando a borda externa
-    const noteDate = parseLocalDate(note.data);
+    const noteDate = parseDateToLocal(note.data);
 
     // Calcular altura total do card primeiro
     let totalCardHeight = 13; // header height
@@ -343,8 +302,8 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
     );
   }
 
-  // Salvar PDF
-  let fileName = patient.nome.replace(/\s+/g, "_");
+  // Salvar PDF com nome sanitizado
+  let fileName = sanitizeFileName(patient.nome);
 
   // Adicionar período filtrado ao nome se houver
   if (options.startDate && options.endDate) {

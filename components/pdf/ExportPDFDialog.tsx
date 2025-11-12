@@ -3,27 +3,8 @@
 import { useState } from "react";
 import { Download, X, Calendar } from "lucide-react";
 import { generatePatientPDF } from "@/lib/pdf-export";
-
-interface HourlyNote {
-  hora: string;
-  descricao: string;
-}
-
-interface DailyNote {
-  data: Date;
-  horaDormiu: string | null;
-  horaAcordou: string | null;
-  humor: number | null;
-  detalhesExtras: string | null;
-  tags: string[];
-  hourlyNotes: HourlyNote[];
-}
-
-interface PatientData {
-  nome: string;
-  dataNascimento: Date | null;
-  dailyNotes: DailyNote[];
-}
+import { parseLocalDate } from "@/lib/dateUtils";
+import type { PatientData } from "@/lib/types";
 
 interface ExportPDFDialogProps {
   patient: PatientData;
@@ -40,15 +21,12 @@ export function ExportPDFDialog({ patient, onClose }: ExportPDFDialogProps) {
       endDate?: Date;
     } = {};
 
-    // Criar datas no timezone local (não UTC)
-    // Input date vem como "2025-11-03", precisamos criar como data local
+    // Usar função centralizada para parsing de datas
     if (startDate) {
-      const [year, month, day] = startDate.split('-').map(Number);
-      options.startDate = new Date(year, month - 1, day);
+      options.startDate = parseLocalDate(startDate);
     }
     if (endDate) {
-      const [year, month, day] = endDate.split('-').map(Number);
-      options.endDate = new Date(year, month - 1, day);
+      options.endDate = parseLocalDate(endDate);
     }
 
     generatePatientPDF(patient, options);
