@@ -175,7 +175,7 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
 
   sortedNotes.forEach((note, index) => {
     // Verificar se precisa de nova página
-    if (yPosition > 250) {
+    if (yPosition > 240) {
       doc.addPage();
       yPosition = 20;
     }
@@ -186,15 +186,17 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
     // Cabeçalho da nota com fundo cinza
     doc.setFillColor(241, 245, 249); // slate-100
     doc.setDrawColor(203, 213, 225); // slate-300
-    doc.roundedRect(margin, yPosition, contentWidth, 10, 1.5, 1.5, "FD");
+    doc.roundedRect(margin, yPosition, contentWidth, 11, 1.5, 1.5, "FD");
 
     // Data da anotação no cabeçalho
-    doc.setFontSize(13);
+    doc.setFontSize(12);
     doc.setTextColor(30, 58, 138); // blue-900
+    doc.setFont(undefined, "bold");
     const formattedDate = format(noteDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR });
-    doc.text(formattedDate, margin + 3, yPosition + 7);
+    doc.text(formattedDate, margin + 4, yPosition + 7.5);
 
-    yPosition += 12;
+    doc.setFont(undefined, "normal");
+    yPosition += 13;
 
     // Tags
     if (note.tags && note.tags.length > 0) {
@@ -221,26 +223,26 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
     doc.setFillColor(255, 255, 255); // white
 
     const boxStartY = yPosition;
-    let boxHeight = 10;
+    let boxHeight = 12;
 
     // Calcular altura necessária
-    if (note.horaAcordou || note.horaDormiu) boxHeight += 7;
-    if (note.humor) boxHeight += 7;
+    if (note.horaAcordou || note.horaDormiu) boxHeight += 8;
+    if (note.humor) boxHeight += 8;
     if (note.detalhesExtras) {
-      const detailsLines = doc.splitTextToSize(note.detalhesExtras, contentWidth - 12);
-      boxHeight += detailsLines.length * 5 + 8;
+      const detailsLines = doc.splitTextToSize(note.detalhesExtras, contentWidth - 14);
+      boxHeight += detailsLines.length * 5 + 10;
     }
     if (note.hourlyNotes.length > 0) {
       note.hourlyNotes.forEach((hourly) => {
-        const hourlyLines = doc.splitTextToSize(`  ${hourly.hora} - ${hourly.descricao}`, contentWidth - 12);
-        boxHeight += hourlyLines.length * 4.5 + 2;
+        const hourlyLines = doc.splitTextToSize(`  ${hourly.hora} - ${hourly.descricao}`, contentWidth - 14);
+        boxHeight += hourlyLines.length * 5 + 2;
       });
-      boxHeight += 5;
+      boxHeight += 8;
     }
 
     doc.roundedRect(margin, boxStartY, contentWidth, boxHeight, 1.5, 1.5, "FD");
 
-    yPosition += 5;
+    yPosition += 7;
 
     // Horários de sono
     if (note.horaAcordou || note.horaDormiu) {
@@ -250,16 +252,16 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
       if (note.horaAcordou) sleepText += `Acordou: ${note.horaAcordou}`;
       if (note.horaAcordou && note.horaDormiu) sleepText += "  |  ";
       if (note.horaDormiu) sleepText += `Dormiu: ${note.horaDormiu}`;
-      doc.text(sleepText, margin + 5, yPosition);
-      yPosition += 7;
+      doc.text(sleepText, margin + 6, yPosition);
+      yPosition += 8;
     }
 
     // Humor
     if (note.humor) {
       doc.setFontSize(10);
       doc.setTextColor(51, 65, 85);
-      doc.text(`Humor: ${humorLabels[note.humor - 1]} (${note.humor}/5)`, margin + 5, yPosition);
-      yPosition += 7;
+      doc.text(`Humor: ${humorLabels[note.humor - 1]} (${note.humor}/5)`, margin + 6, yPosition);
+      yPosition += 8;
     }
 
     // Detalhes extras
@@ -267,18 +269,18 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
       doc.setFontSize(10);
       doc.setTextColor(30, 58, 138); // blue-900
       doc.setFont(undefined, "bold");
-      doc.text("Detalhes:", margin + 5, yPosition);
-      yPosition += 5;
+      doc.text("Detalhes:", margin + 6, yPosition);
+      yPosition += 6;
 
       doc.setFont(undefined, "normal");
       doc.setFontSize(10);
       doc.setTextColor(51, 65, 85); // slate-700
-      const detailsLines = doc.splitTextToSize(note.detalhesExtras, contentWidth - 12);
+      const detailsLines = doc.splitTextToSize(note.detalhesExtras, contentWidth - 14);
       detailsLines.forEach((line: string) => {
-        doc.text(line, margin + 5, yPosition);
+        doc.text(line, margin + 6, yPosition);
         yPosition += 5;
       });
-      yPosition += 3;
+      yPosition += 4;
     }
 
     // Registros horários
@@ -286,24 +288,24 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
       doc.setFontSize(10);
       doc.setTextColor(30, 58, 138); // blue-900
       doc.setFont(undefined, "bold");
-      doc.text(`Registros Horarios (${note.hourlyNotes.length}):`, margin + 5, yPosition);
-      yPosition += 5;
+      doc.text(`Registros Horarios (${note.hourlyNotes.length}):`, margin + 6, yPosition);
+      yPosition += 6;
 
       doc.setFont(undefined, "normal");
       note.hourlyNotes.forEach((hourly) => {
         doc.setFontSize(9);
         doc.setTextColor(51, 65, 85);
         const hourlyText = `  ${hourly.hora} - ${hourly.descricao}`;
-        const hourlyLines = doc.splitTextToSize(hourlyText, contentWidth - 12);
+        const hourlyLines = doc.splitTextToSize(hourlyText, contentWidth - 14);
         hourlyLines.forEach((line: string) => {
-          doc.text(line, margin + 5, yPosition);
-          yPosition += 4.5;
+          doc.text(line, margin + 6, yPosition);
+          yPosition += 5;
         });
         yPosition += 2;
       });
     }
 
-    yPosition += 8;
+    yPosition += 10;
   });
 
   // Rodapé na última página
