@@ -1,17 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Home, Users } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Home, Users, LogOut } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
 
 export function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const isActive = (path: string) => {
     if (path === "/dashboard") {
       return pathname === "/" || pathname === "/dashboard";
     }
     return pathname.startsWith(path);
+  };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push("/login");
+      router.refresh();
+    } catch (error) {
+      console.error("Error logging out:", error);
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -40,6 +57,15 @@ export function BottomNav() {
           <Users size={24} />
           <span className="text-xs mt-1">Pacientes</span>
         </Link>
+
+        <button
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="flex flex-col items-center justify-center flex-1 h-full transition-colors text-slate-400 hover:bg-slate-700 disabled:opacity-50"
+        >
+          <LogOut size={24} />
+          <span className="text-xs mt-1">{isLoggingOut ? "Saindo..." : "Sair"}</span>
+        </button>
       </div>
     </nav>
   );
