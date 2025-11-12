@@ -174,15 +174,8 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
   );
 
   sortedNotes.forEach((note, index) => {
-    // Verificar se precisa de nova página
-    if (yPosition > 230) {
-      doc.addPage();
-      yPosition = 20;
-    }
-
     // Card para cada nota - começar desenhando a borda externa
     const noteDate = parseLocalDate(note.data);
-    const cardStartY = yPosition;
 
     // Calcular altura total do card primeiro
     let totalCardHeight = 13; // header height
@@ -208,6 +201,14 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
       boxHeight += 8;
     }
     totalCardHeight += boxHeight + 2; // +2 for spacing between header and box
+
+    // Verificar se o card inteiro cabe na página atual
+    if (yPosition + totalCardHeight > 270) {
+      doc.addPage();
+      yPosition = 20;
+    }
+
+    const cardStartY = yPosition;
 
     // Desenhar borda externa do card
     doc.setDrawColor(203, 213, 225); // slate-300
@@ -237,16 +238,26 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
         const colors = tagColors[tag] || tagColors.default;
         doc.setFillColor(...colors.bg);
         doc.setTextColor(...colors.text);
-        doc.setFontSize(8);
+        doc.setFontSize(9);
+        doc.setFont(undefined, "bold");
 
         const tagText = ` ${tag} `;
-        const tagWidth = doc.getTextWidth(tagText) + 2;
+        const tagWidth = doc.getTextWidth(tagText) + 4;
+        const tagHeight = 5;
 
-        doc.roundedRect(tagX, yPosition - 2.5, tagWidth, 4.5, 1, 1, "F");
-        doc.text(tagText, tagX + 1, yPosition);
+        // Desenhar retângulo com borda
+        doc.roundedRect(tagX, yPosition - 3, tagWidth, tagHeight, 1.5, 1.5, "F");
+        doc.setDrawColor(...colors.text);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(tagX, yPosition - 3, tagWidth, tagHeight, 1.5, 1.5, "S");
+        doc.setLineWidth(0.2);
 
-        tagX += tagWidth + 3;
+        // Texto da tag
+        doc.text(tagText, tagX + 2, yPosition + 0.5);
+
+        tagX += tagWidth + 4;
       });
+      doc.setFont(undefined, "normal");
       yPosition += 8;
     }
 
