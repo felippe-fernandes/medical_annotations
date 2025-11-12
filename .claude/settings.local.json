@@ -25,7 +25,8 @@
       "Bash(npm run build:*)",
       "Bash(gh run view:*)",
       "Bash(npm run lint:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
