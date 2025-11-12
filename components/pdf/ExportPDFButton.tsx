@@ -20,6 +20,7 @@ interface DailyNote {
 }
 
 interface PatientData {
+  id?: string;
   nome: string;
   dataNascimento: Date | null;
   dailyNotes: DailyNote[];

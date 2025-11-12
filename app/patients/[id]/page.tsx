@@ -8,6 +8,7 @@ import { DeleteButton } from "@/components/ui/DeleteButton";
 import { StartDailyNote } from "@/components/notes/StartDailyNote";
 import { Logo } from "@/components/layout/Logo";
 import { ExportPDFButton } from "@/components/pdf/ExportPDFButton";
+import { GerarResumoIAButton } from "@/components/ai/GerarResumoIAButton";
 import { NotesFilterView } from "@/components/notes/NotesFilterView";
 import { createClient } from "@/lib/supabase/server";
 
@@ -87,24 +88,31 @@ export default async function PatientDetailPage({
           <StartDailyNote patientId={id} />
 
           {patient.dailyNotes.length > 0 && (
-            <ExportPDFButton
-              patient={{
-                nome: patient.nome,
-                dataNascimento: patient.dataNascimento,
-                dailyNotes: patient.dailyNotes.map((note) => ({
-                  data: note.data,
-                  horaDormiu: note.horaDormiu,
-                  horaAcordou: note.horaAcordou,
-                  humor: note.humor,
-                  detalhesExtras: note.detalhesExtras,
-                  tags: note.tags,
-                  hourlyNotes: note.hourlyNotes.map((hn) => ({
-                    hora: hn.hora,
-                    descricao: hn.descricao,
+            <div className="flex gap-3">
+              <ExportPDFButton
+                patient={{
+                  id: patient.id,
+                  nome: patient.nome,
+                  dataNascimento: patient.dataNascimento,
+                  dailyNotes: patient.dailyNotes.map((note: any) => ({
+                    data: note.data,
+                    horaDormiu: note.horaDormiu,
+                    horaAcordou: note.horaAcordou,
+                    humor: note.humor,
+                    detalhesExtras: note.detalhesExtras,
+                    tags: note.tags,
+                    hourlyNotes: note.hourlyNotes.map((hn: any) => ({
+                      hora: hn.hora,
+                      descricao: hn.descricao,
+                    })),
                   })),
-                })),
-              }}
-            />
+                }}
+              />
+              <GerarResumoIAButton
+                patientId={id}
+                patientName={patient.nome}
+              />
+            </div>
           )}
         </div>
 
@@ -118,7 +126,7 @@ export default async function PatientDetailPage({
         ) : (
           <NotesFilterView
             patientId={id}
-            dailyNotes={patient.dailyNotes.map((note) => ({
+            dailyNotes={patient.dailyNotes.map((note: any) => ({
               id: note.id,
               data: note.data,
               horaDormiu: note.horaDormiu,
@@ -126,7 +134,7 @@ export default async function PatientDetailPage({
               humor: note.humor,
               detalhesExtras: note.detalhesExtras,
               tags: note.tags,
-              hourlyNotes: note.hourlyNotes.map((hn) => ({
+              hourlyNotes: note.hourlyNotes.map((hn: any) => ({
                 hora: hn.hora,
                 descricao: hn.descricao,
               })),

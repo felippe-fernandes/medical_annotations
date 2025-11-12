@@ -59,7 +59,7 @@ export default async function PatientsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {patients.map((patient) => (
+            {patients.map((patient: any) => (
               <Link
                 key={patient.id}
                 href={`/patients/${patient.id}`}
