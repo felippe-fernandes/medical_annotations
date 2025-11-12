@@ -49,7 +49,6 @@ interface PatientData {
 interface PDFExportOptions {
   startDate?: Date;
   endDate?: Date;
-  aiResumo?: string;
 }
 
 const humorLabels = ["Muito Ruim", "Ruim", "Neutro", "Bom", "Muito Bom"];
@@ -144,69 +143,6 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
   }
 
   yPosition += cardHeight - (patient.dataNascimento ? 23 : 16);
-
-  // Seção de Resumo com IA (se fornecido)
-  if (options.aiResumo) {
-    yPosition += 12;
-    doc.setFontSize(16);
-    doc.setTextColor(147, 51, 234); // purple-600
-    doc.text("Resumo Clínico (IA)", margin, yPosition);
-
-    // Linha decorativa abaixo do título
-    yPosition += 3;
-    doc.setDrawColor(168, 85, 247); // purple-500
-    doc.setLineWidth(0.5);
-    doc.line(margin, yPosition, margin + 60, yPosition);
-
-    yPosition += 8;
-    doc.setLineWidth(0.2);
-
-    // Card para o resumo
-    doc.setFillColor(250, 245, 255); // purple-50
-    doc.setDrawColor(216, 180, 254); // purple-300
-
-    // Processar o resumo markdown em texto simples
-    const resumoText = options.aiResumo
-      .replace(/\*\*/g, '') // Remover negrito
-      .replace(/\*/g, '')   // Remover itálico
-      .replace(/^#{1,6}\s+/gm, '') // Remover headers markdown
-      .replace(/^\s*-\s+/gm, '• '); // Converter listas em bullets
-
-    // Dividir o texto em linhas que cabem na largura
-    const resumoLines = doc.splitTextToSize(resumoText, contentWidth - 12);
-    const resumoHeight = Math.min(resumoLines.length * 5 + 10, 80); // Máximo de 80mm
-
-    // Verificar se cabe na página
-    if (yPosition + resumoHeight > 270) {
-      doc.addPage();
-      yPosition = 20;
-    }
-
-    doc.roundedRect(margin, yPosition, contentWidth, resumoHeight, 2, 2, "FD");
-
-    yPosition += 8;
-    doc.setFontSize(9);
-    doc.setTextColor(76, 29, 149); // purple-900
-
-    // Renderizar linhas do resumo (limitado à altura do card)
-    const maxLines = Math.floor((resumoHeight - 10) / 5);
-    const linesToRender = resumoLines.slice(0, maxLines);
-
-    linesToRender.forEach((line: string) => {
-      doc.text(line, margin + 6, yPosition);
-      yPosition += 5;
-    });
-
-    // Se houver mais linhas, adicionar indicador
-    if (resumoLines.length > maxLines) {
-      doc.setFontSize(8);
-      doc.setTextColor(147, 51, 234);
-      doc.text("(resumo completo disponível no sistema)", margin + 6, yPosition);
-      yPosition += 5;
-    }
-
-    yPosition += 10;
-  }
 
   // Seção de Histórico de Anotações
   yPosition += 12;

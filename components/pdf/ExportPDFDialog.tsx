@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download, X, Calendar, Sparkles, Loader2 } from "lucide-react";
+import { Download, X, Calendar } from "lucide-react";
 import { generatePatientPDF } from "@/lib/pdf-export";
 
 interface HourlyNote {
@@ -33,48 +33,11 @@ interface ExportPDFDialogProps {
 export function ExportPDFDialog({ patient, onClose }: ExportPDFDialogProps) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [includeAIResumo, setIncludeAIResumo] = useState(false);
-  const [loadingResumo, setLoadingResumo] = useState(false);
-  const [resumo, setResumo] = useState<string | null>(null);
-
-  const handleGenerateResumo = async () => {
-    setLoadingResumo(true);
-    try {
-      // Precisamos pegar o patientId - vamos assumir que está disponível
-      // Se não estiver, precisaremos adicionar à interface PatientData
-      const response = await fetch("/api/ai/resumo", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          patientId: (patient as any).id, // Assumindo que o ID existe
-          startDate: startDate || null,
-          endDate: endDate || null,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Erro ao gerar resumo");
-      }
-
-      setResumo(data.resumo);
-      setIncludeAIResumo(true);
-    } catch (error) {
-      console.error("Erro ao gerar resumo:", error);
-      alert("Erro ao gerar resumo com IA. Verifique se a chave da API está configurada.");
-    } finally {
-      setLoadingResumo(false);
-    }
-  };
 
   const handleExport = () => {
     const options: {
       startDate?: Date;
       endDate?: Date;
-      aiResumo?: string;
     } = {};
 
     // Criar datas no timezone local (não UTC)
@@ -86,10 +49,6 @@ export function ExportPDFDialog({ patient, onClose }: ExportPDFDialogProps) {
     if (endDate) {
       const [year, month, day] = endDate.split('-').map(Number);
       options.endDate = new Date(year, month - 1, day);
-    }
-
-    if (includeAIResumo && resumo) {
-      options.aiResumo = resumo;
     }
 
     generatePatientPDF(patient, options);
@@ -183,55 +142,6 @@ export function ExportPDFDialog({ patient, onClose }: ExportPDFDialogProps) {
                 </>
               )}
             </p>
-          </div>
-
-          {/* AI Resumo Section */}
-          <div className="space-y-3 border-t border-slate-700 pt-4">
-            <div className="flex items-center gap-2 text-purple-400">
-              <Sparkles size={18} />
-              <span className="font-medium">Resumo com IA (opcional)</span>
-            </div>
-
-            {!resumo ? (
-              <button
-                onClick={handleGenerateResumo}
-                disabled={loadingResumo}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loadingResumo ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    Gerando resumo...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles size={18} />
-                    Gerar resumo e incluir no PDF
-                  </>
-                )}
-              </button>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between bg-purple-900/20 border border-purple-500/50 rounded-lg p-3">
-                  <div className="flex items-center gap-2">
-                    <Sparkles size={16} className="text-purple-400" />
-                    <span className="text-sm text-purple-300">Resumo gerado com sucesso</span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setResumo(null);
-                      setIncludeAIResumo(false);
-                    }}
-                    className="text-xs text-purple-400 hover:text-purple-300"
-                  >
-                    Remover
-                  </button>
-                </div>
-                <p className="text-xs text-slate-400">
-                  O resumo será incluído no início do PDF
-                </p>
-              </div>
-            )}
           </div>
         </div>
 

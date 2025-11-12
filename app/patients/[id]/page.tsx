@@ -91,7 +91,6 @@ export default async function PatientDetailPage({
             <div className="flex gap-3">
               <ExportPDFButton
                 patient={{
-                  id: patient.id,
                   nome: patient.nome,
                   dataNascimento: patient.dataNascimento,
                   dailyNotes: patient.dailyNotes.map((note: any) => ({

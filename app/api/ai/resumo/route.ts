@@ -99,32 +99,42 @@ export async function POST(request: Request) {
     });
 
     // Criar prompt para a IA
-    const prompt = `Você é um assistente médico especializado em análise de anotações clínicas. Analise as seguintes anotações do paciente "${patient.nome}" e forneça um resumo clínico detalhado e profissional.
+    const prompt = `Você é um assistente médico. Sua função é APENAS ORGANIZAR e TRANSCREVER fielmente as anotações médicas do paciente "${patient.nome}", sem fazer interpretações, inferências ou sugestões.
 
-ANOTAÇÕES:
+INSTRUÇÕES IMPORTANTES:
+- NÃO interprete ou infira informações que não estão explícitas nas anotações
+- NÃO faça sugestões ou recomendações médicas
+- NÃO tire conclusões além do que está escrito
+- APENAS organize e estruture as informações existentes de forma clara
+- Seja 100% fiel ao conteúdo original
+
+ANOTAÇÕES MÉDICAS:
 ${JSON.stringify(notesData, null, 2)}
 
-Por favor, forneça um resumo estruturado contendo:
+Por favor, organize as informações acima de forma estruturada e fidedigna:
 
-1. **Resumo Geral**: Um parágrafo resumindo o estado geral do paciente no período
-2. **Padrões de Sono**: Análise dos horários de sono e acordar
-3. **Estado Emocional**: Análise dos registros de humor
-4. **Eventos Importantes**: Lista dos principais eventos médicos (consultas, exames, etc.) baseado nas tags
-5. **Observações Relevantes**: Destaques das anotações horárias e detalhes extras
-6. **Recomendações**: Sugestões para acompanhamento (se aplicável)
+1. **Resumo do Período**: Liste objetivamente as datas e informações registradas
+2. **Registro de Sono**: Transcreva os horários de sono e acordar registrados
+3. **Registro de Humor**: Transcreva os registros de humor exatamente como registrados
+4. **Eventos Médicos**: Liste as tags e eventos registrados (consultas, exames, etc.)
+5. **Anotações Detalhadas**: Transcreva fielmente os detalhes extras e observações horárias
 
-Formato: Use markdown para estruturar o resumo. Seja conciso mas informativo. Foque em aspectos clinicamente relevantes.`;
+IMPORTANTE: Use apenas as informações presentes nas anotações. Não adicione interpretações pessoais ou médicas. Mantenha o texto objetivo e factual.`;
 
     // Chamar API do Groq
     const chatCompletion = await groq.chat.completions.create({
       messages: [
+        {
+          role: "system",
+          content: "Você é um assistente de organização de anotações médicas. Sua função é APENAS transcrever e organizar informações fielmente, sem fazer interpretações ou sugestões. Seja 100% fiel ao conteúdo original."
+        },
         {
           role: "user",
           content: prompt
         }
       ],
       model: "llama-3.3-70b-versatile", // Modelo gratuito e rápido
-      temperature: 0.3, // Mais determinístico para contexto médico
+      temperature: 0.1, // Muito determinístico para contexto médico - transcrição fiel
       max_tokens: 2000,
     });
 
