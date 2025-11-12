@@ -46,11 +46,6 @@ export async function POST(request: Request) {
           include: {
             hourlyNotes: {
               orderBy: { hora: 'asc' }
-            },
-            tags: {
-              include: {
-                tag: true
-              }
             }
           }
         },
@@ -85,7 +80,7 @@ export async function POST(request: Request) {
       horaDormiu: note.horaDormiu,
       horaAcordou: note.horaAcordou,
       humor: note.humor ? ["Muito Ruim", "Ruim", "Neutro", "Bom", "Muito Bom"][note.humor - 1] : null,
-      tags: note.tags.map((t: any) => t.tag.nome),
+      tags: note.tags,
       detalhesExtras: note.detalhesExtras,
       hourlyNotes: note.hourlyNotes.map((h: any) => ({
         hora: h.hora,
@@ -99,34 +94,66 @@ export async function POST(request: Request) {
     });
 
     // Criar prompt para a IA
-    const prompt = `Você é um assistente médico. Sua função é APENAS ORGANIZAR e TRANSCREVER fielmente as anotações médicas do paciente "${patient.nome}", sem fazer interpretações, inferências ou sugestões.
+    const prompt = `Você é um assistente médico especializado em organizar anotações neurológicas. Gere um relatório profissional e detalhado baseado nas anotações do paciente "${patient.nome}".
 
-INSTRUÇÕES IMPORTANTES:
-- NÃO interprete ou infira informações que não estão explícitas nas anotações
-- NÃO faça sugestões ou recomendações médicas
-- NÃO tire conclusões além do que está escrito
-- APENAS organize e estruture as informações existentes de forma clara
-- Seja 100% fiel ao conteúdo original
+FORMATO DO RELATÓRIO (siga este modelo):
 
-ANOTAÇÕES MÉDICAS:
+## RELATÓRIO DE ACOMPANHAMENTO NEUROLÓGICO
+
+**Paciente:** ${patient.nome}
+**Período:** [primeira data] a [última data]
+
+---
+
+### MINI RESUMO DO PERÍODO
+
+| Métrica | Dados do Período |
+| :--- | :--- |
+| **Total de Dias com Registros** | X dias |
+| **Padrão de Humor** | Descreva o padrão geral observado (ex: "Predomínio de humor bom/neutro"). Se não houver dados de humor, OMITA esta linha. |
+| **Padrão de Sono** | Descreva os horários típicos de dormir e acordar. Se não houver dados, OMITA esta linha. |
+| **Ajustes Medicamentosos** | Liste qualquer menção a medicamentos ou ajustes. Se não houver, OMITA esta linha completamente. |
+| **Eventos Críticos** | Destaque APENAS eventos realmente importantes/críticos mencionados. Se não houver eventos críticos, OMITA esta linha completamente. |
+| **Comportamento Geral** | Resumo objetivo do comportamento no período |
+
+---
+
+### DIÁRIO DE ACOMPANHAMENTO DETALHADO
+
+Para cada dia com anotações, crie uma seção estruturada assim:
+
+#### **[DD/MM]**
+* **Rotina:** [Descreva horários de acordar, refeições, atividades do dia]
+* **Comportamento:** [Descreva estados emocionais, interações, particularidades - APENAS se houver informações relevantes]
+* **Saúde/Consultas:** [INCLUA esta seção APENAS se houver menções explícitas a consultas médicas, exames ou saúde]
+* **Crises/Eventos:** [INCLUA esta seção APENAS se houver menção a crises, convulsões ou eventos médicos importantes]
+* **Sono:** [Horário que dormiu e/ou acordou - APENAS se registrado]
+* **Observações:** [INCLUA APENAS se houver observações adicionais relevantes das anotações horárias]
+
+INSTRUÇÕES CRÍTICAS:
+- **REGRA DE OURO**: NÃO inclua uma seção/linha se não houver dados para ela
+- **Saúde/Consultas**: APENAS se o dia tiver consulta médica, exame ou evento de saúde
+- **Eventos Críticos**: APENAS se houver algo realmente relevante (crises, surtos, etc)
+- **Ajustes Medicamentosos**: APENAS se medicação for mencionada
+- Use APENAS informações presentes nas anotações fornecidas
+- Seja fiel ao conteúdo original, organize mas não invente
+- Se uma seção inteira não tiver dados em NENHUM dia, OMITA o título da seção
+- Mantenha o tom profissional mas humano
+- Organize as informações horárias dentro do contexto do dia
+- Use as tags para identificar eventos especiais (consulta médica, exames, etc)
+- Formate datas no padrão brasileiro (DD/MM)
+
+ANOTAÇÕES DO PACIENTE:
 ${JSON.stringify(notesData, null, 2)}
 
-Por favor, organize as informações acima de forma estruturada e fidedigna:
-
-1. **Resumo do Período**: Liste objetivamente as datas e informações registradas
-2. **Registro de Sono**: Transcreva os horários de sono e acordar registrados
-3. **Registro de Humor**: Transcreva os registros de humor exatamente como registrados
-4. **Eventos Médicos**: Liste as tags e eventos registrados (consultas, exames, etc.)
-5. **Anotações Detalhadas**: Transcreva fielmente os detalhes extras e observações horárias
-
-IMPORTANTE: Use apenas as informações presentes nas anotações. Não adicione interpretações pessoais ou médicas. Mantenha o texto objetivo e factual.`;
+Gere o relatório completo seguindo o formato acima, sendo fiel às informações registradas.`;
 
     // Chamar API do Groq
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: "Você é um assistente de organização de anotações médicas. Sua função é APENAS transcrever e organizar informações fielmente, sem fazer interpretações ou sugestões. Seja 100% fiel ao conteúdo original."
+          content: "Você é um assistente médico especializado em gerar relatórios neurológicos profissionais. Organize as informações de forma clara, estruturada e fiel ao conteúdo original. Use formato markdown para melhor legibilidade."
         },
         {
           role: "user",
@@ -134,8 +161,8 @@ IMPORTANTE: Use apenas as informações presentes nas anotações. Não adicione
         }
       ],
       model: "llama-3.3-70b-versatile", // Modelo gratuito e rápido
-      temperature: 0.1, // Muito determinístico para contexto médico - transcrição fiel
-      max_tokens: 2000,
+      temperature: 0.3, // Ligeiramente criativo para organização mas fiel aos dados
+      max_tokens: 4000, // Aumentado para relatórios mais completos
     });
 
     const resumo = chatCompletion.choices[0]?.message?.content || "";
