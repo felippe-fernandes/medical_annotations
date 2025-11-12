@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Download, X, Calendar, Tag } from "lucide-react";
+import { useState } from "react";
+import { Download, X, Calendar } from "lucide-react";
 import { generatePatientPDF } from "@/lib/pdf-export";
 
 interface HourlyNote {
@@ -33,22 +33,11 @@ interface ExportPDFDialogProps {
 export function ExportPDFDialog({ patient, onClose }: ExportPDFDialogProps) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [selectedTag, setSelectedTag] = useState("");
-
-  // Extrair todas as tags únicas das anotações
-  const allTags = useMemo(() => {
-    const tags = new Set<string>();
-    patient.dailyNotes.forEach((note) => {
-      note.tags.forEach((tag) => tags.add(tag));
-    });
-    return Array.from(tags).sort();
-  }, [patient.dailyNotes]);
 
   const handleExport = () => {
     const options: {
       startDate?: Date;
       endDate?: Date;
-      filterTag?: string;
     } = {};
 
     // Criar datas no timezone local (não UTC)
@@ -61,7 +50,6 @@ export function ExportPDFDialog({ patient, onClose }: ExportPDFDialogProps) {
       const [year, month, day] = endDate.split('-').map(Number);
       options.endDate = new Date(year, month - 1, day);
     }
-    if (selectedTag) options.filterTag = selectedTag;
 
     generatePatientPDF(patient, options);
     onClose();
@@ -141,44 +129,12 @@ export function ExportPDFDialog({ patient, onClose }: ExportPDFDialogProps) {
             )}
           </div>
 
-          {/* Tag Filter */}
-          {allTags.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center gap-2 text-slate-300">
-                <Tag size={18} />
-                <span className="font-medium">Filtrar por Tag</span>
-              </div>
-
-              <select
-                value={selectedTag}
-                onChange={(e) => setSelectedTag(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Todas as tags</option>
-                {allTags.map((tag) => (
-                  <option key={tag} value={tag}>
-                    {tag}
-                  </option>
-                ))}
-              </select>
-
-              {selectedTag && (
-                <button
-                  onClick={() => setSelectedTag("")}
-                  className="text-sm text-blue-400 hover:text-blue-300"
-                >
-                  Limpar filtro
-                </button>
-              )}
-            </div>
-          )}
-
           {/* Info */}
           <div className="bg-slate-900 border border-slate-700 rounded-lg p-4">
             <p className="text-sm text-slate-400">
-              {startDate || endDate || selectedTag ? (
+              {startDate || endDate ? (
                 <>
-                  Serão exportadas apenas as anotações que correspondem aos filtros selecionados.
+                  Serão exportadas apenas as anotações do período selecionado.
                 </>
               ) : (
                 <>
