@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import Groq from "groq-sdk";
+import { sanitizeUserInput } from "@/lib/utils/security";
 
 // POST - Gerar resumo com IA das anotações de um paciente
 export async function POST(request: Request) {
@@ -74,17 +75,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // Preparar dados para a IA
+    // Preparar dados para a IA com sanitização
     const notesData = patient.dailyNotes.map((note: any) => ({
       data: note.data.toISOString().split('T')[0],
       horaDormiu: note.horaDormiu,
       horaAcordou: note.horaAcordou,
       humor: note.humor ? ["Muito Ruim", "Ruim", "Neutro", "Bom", "Muito Bom"][note.humor - 1] : null,
-      tags: note.tags,
-      detalhesExtras: note.detalhesExtras,
+      tags: note.tags.map((tag: string) => sanitizeUserInput(tag)),
+      detalhesExtras: note.detalhesExtras ? sanitizeUserInput(note.detalhesExtras) : null,
       hourlyNotes: note.hourlyNotes.map((h: any) => ({
         hora: h.hora,
-        descricao: h.descricao
+        descricao: sanitizeUserInput(h.descricao)
       }))
     }));
 
@@ -93,14 +94,15 @@ export async function POST(request: Request) {
       apiKey: process.env.GROQ_API_KEY
     });
 
-    // Criar prompt para a IA
-    const prompt = `Você é um assistente médico especializado em organizar anotações neurológicas. Gere um relatório profissional e detalhado baseado nas anotações do paciente "${patient.nome}".
+    // Criar prompt para a IA com nome sanitizado
+    const sanitizedPatientName = sanitizeUserInput(patient.nome);
+    const prompt = `Você é um assistente médico especializado em organizar anotações neurológicas. Gere um relatório profissional e detalhado baseado nas anotações do paciente "${sanitizedPatientName}".
 
 FORMATO DO RELATÓRIO (siga este modelo):
 
 ## RELATÓRIO DE ACOMPANHAMENTO NEUROLÓGICO
 
-**Paciente:** ${patient.nome}
+**Paciente:** ${sanitizedPatientName}
 **Período:** [primeira data] a [última data]
 
 ---
