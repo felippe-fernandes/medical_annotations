@@ -224,11 +224,11 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
     // Data da anotação no cabeçalho
     doc.setFontSize(12);
     doc.setTextColor(30, 58, 138); // blue-900
-    doc.setFont(undefined, "bold");
+    doc.setFont("helvetica", "bold");
     const formattedDate = format(noteDate, "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR });
     doc.text(formattedDate, margin + 4, yPosition + 7.5);
 
-    doc.setFont(undefined, "normal");
+    doc.setFont("helvetica", "normal");
     yPosition += 13;
 
     // Tags
@@ -239,7 +239,7 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
         doc.setFillColor(...colors.bg);
         doc.setTextColor(...colors.text);
         doc.setFontSize(9);
-        doc.setFont(undefined, "bold");
+        doc.setFont("helvetica", "bold");
 
         const tagText = ` ${tag} `;
         const tagWidth = doc.getTextWidth(tagText) + 4;
@@ -257,7 +257,7 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
 
         tagX += tagWidth + 4;
       });
-      doc.setFont(undefined, "normal");
+      doc.setFont("helvetica", "normal");
       yPosition += 8;
     }
 
@@ -288,11 +288,11 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
     if (note.detalhesExtras) {
       doc.setFontSize(10);
       doc.setTextColor(30, 58, 138); // blue-900
-      doc.setFont(undefined, "bold");
+      doc.setFont("helvetica", "bold");
       doc.text("Detalhes:", margin + 6, yPosition);
       yPosition += 6;
 
-      doc.setFont(undefined, "normal");
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.setTextColor(51, 65, 85); // slate-700
       const detailsLines = doc.splitTextToSize(note.detalhesExtras, contentWidth - 14);
@@ -307,11 +307,11 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
     if (note.hourlyNotes.length > 0) {
       doc.setFontSize(10);
       doc.setTextColor(30, 58, 138); // blue-900
-      doc.setFont(undefined, "bold");
+      doc.setFont("helvetica", "bold");
       doc.text(`Registros Horarios (${note.hourlyNotes.length}):`, margin + 6, yPosition);
       yPosition += 6;
 
-      doc.setFont(undefined, "normal");
+      doc.setFont("helvetica", "normal");
       note.hourlyNotes.forEach((hourly) => {
         doc.setFontSize(9);
         doc.setTextColor(51, 65, 85);

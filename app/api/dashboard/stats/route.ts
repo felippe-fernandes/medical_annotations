@@ -97,7 +97,7 @@ export async function GET(request: Request) {
   const avgHumor =
     notesWithHumor.length > 0
       ? (
-          notesWithHumor.reduce((sum, note) => sum + (note.humor || 0), 0) /
+          notesWithHumor.reduce((sum: number, note: any) => sum + (note.humor || 0), 0) /
           notesWithHumor.length
         ).toFixed(1)
       : null;

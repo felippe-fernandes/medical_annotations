@@ -26,6 +26,7 @@
     "@types/react-datepicker": "^7.0.0",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
+    "groq-sdk": "^0.34.0",
     "jspdf": "^3.0.3",
     "lucide-react": "^0.552.0",
     "next": "^16.0.1",

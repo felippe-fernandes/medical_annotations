@@ -111,7 +111,7 @@ export default async function NoteDetailPage({
             <div className="mb-6 pb-6 border-b border-slate-700">
               <p className="text-sm text-slate-500 mb-3">Tags</p>
               <div className="flex flex-wrap gap-2">
-                {note.tags.map((tag, index) => (
+                {note.tags.map((tag: any, index: number) => (
                   <span
                     key={index}
                     className="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded-full text-sm"
@@ -184,7 +184,7 @@ export default async function NoteDetailPage({
                 </div>
 
                 <div className="space-y-3">
-                  {note.hourlyNotes.map((hourlyNote) => (
+                  {note.hourlyNotes.map((hourlyNote: any) => (
                     <div
                       key={hourlyNote.id}
                       className="p-4 bg-slate-900 rounded-lg"
