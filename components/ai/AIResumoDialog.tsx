@@ -65,9 +65,10 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
     if (!resumo) return;
 
     try {
-      // Importar bibliotecas dinamicamente
+      // Importar bibliotecas e utilitários dinamicamente
       const { default: jsPDF } = await import("jspdf");
       const autoTable = (await import("jspdf-autotable")).default;
+      const { sanitizeFileName } = await import("@/lib/utils/security");
 
       const doc = new jsPDF() as any;
       const pageWidth = doc.internal.pageSize.getWidth();
@@ -350,8 +351,9 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
         });
       }
 
-      // Salvar PDF
-      const fileName = `resumo_${patientName.replace(/\s+/g, "_")}_${new Date().toISOString().split('T')[0]}.pdf`;
+      // Salvar PDF com nome sanitizado
+      const sanitizedName = sanitizeFileName(patientName);
+      const fileName = `resumo_${sanitizedName}_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
