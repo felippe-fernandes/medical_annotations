@@ -175,18 +175,50 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
 
   sortedNotes.forEach((note, index) => {
     // Verificar se precisa de nova página
-    if (yPosition > 240) {
+    if (yPosition > 230) {
       doc.addPage();
       yPosition = 20;
     }
 
-    // Card para cada nota
+    // Card para cada nota - começar desenhando a borda externa
     const noteDate = parseLocalDate(note.data);
+    const cardStartY = yPosition;
+
+    // Calcular altura total do card primeiro
+    let totalCardHeight = 13; // header height
+
+    // Tags height
+    if (note.tags && note.tags.length > 0) {
+      totalCardHeight += 8;
+    }
+
+    // Content box height
+    let boxHeight = 12;
+    if (note.horaAcordou || note.horaDormiu) boxHeight += 8;
+    if (note.humor) boxHeight += 8;
+    if (note.detalhesExtras) {
+      const detailsLines = doc.splitTextToSize(note.detalhesExtras, contentWidth - 14);
+      boxHeight += detailsLines.length * 5 + 10;
+    }
+    if (note.hourlyNotes.length > 0) {
+      note.hourlyNotes.forEach((hourly) => {
+        const hourlyLines = doc.splitTextToSize(`  ${hourly.hora} - ${hourly.descricao}`, contentWidth - 14);
+        boxHeight += hourlyLines.length * 5 + 2;
+      });
+      boxHeight += 8;
+    }
+    totalCardHeight += boxHeight + 2; // +2 for spacing between header and box
+
+    // Desenhar borda externa do card
+    doc.setDrawColor(203, 213, 225); // slate-300
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, cardStartY, contentWidth, totalCardHeight, 2, 2, "S");
+    doc.setLineWidth(0.2);
 
     // Cabeçalho da nota com fundo cinza
     doc.setFillColor(241, 245, 249); // slate-100
     doc.setDrawColor(203, 213, 225); // slate-300
-    doc.roundedRect(margin, yPosition, contentWidth, 11, 1.5, 1.5, "FD");
+    doc.rect(margin, cardStartY, contentWidth, 11, "F");
 
     // Data da anotação no cabeçalho
     doc.setFontSize(12);
@@ -200,7 +232,7 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
 
     // Tags
     if (note.tags && note.tags.length > 0) {
-      let tagX = margin + 3;
+      let tagX = margin + 4;
       note.tags.forEach((tag) => {
         const colors = tagColors[tag] || tagColors.default;
         doc.setFillColor(...colors.bg);
@@ -215,34 +247,11 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
 
         tagX += tagWidth + 3;
       });
-      yPosition += 6;
+      yPosition += 8;
     }
 
-    // Box com informações
-    doc.setDrawColor(226, 232, 240); // slate-200
-    doc.setFillColor(255, 255, 255); // white
-
-    const boxStartY = yPosition;
-    let boxHeight = 12;
-
-    // Calcular altura necessária
-    if (note.horaAcordou || note.horaDormiu) boxHeight += 8;
-    if (note.humor) boxHeight += 8;
-    if (note.detalhesExtras) {
-      const detailsLines = doc.splitTextToSize(note.detalhesExtras, contentWidth - 14);
-      boxHeight += detailsLines.length * 5 + 10;
-    }
-    if (note.hourlyNotes.length > 0) {
-      note.hourlyNotes.forEach((hourly) => {
-        const hourlyLines = doc.splitTextToSize(`  ${hourly.hora} - ${hourly.descricao}`, contentWidth - 14);
-        boxHeight += hourlyLines.length * 5 + 2;
-      });
-      boxHeight += 8;
-    }
-
-    doc.roundedRect(margin, boxStartY, contentWidth, boxHeight, 1.5, 1.5, "FD");
-
-    yPosition += 7;
+    // Conteúdo (não precisa desenhar box, já está dentro do card)
+    yPosition += 5;
 
     // Horários de sono
     if (note.horaAcordou || note.horaDormiu) {
@@ -305,7 +314,8 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
       });
     }
 
-    yPosition += 10;
+    // Avançar para próxima nota (altura do card + espaçamento)
+    yPosition = cardStartY + totalCardHeight + 6;
   });
 
   // Rodapé na última página
