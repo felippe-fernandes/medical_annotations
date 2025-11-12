@@ -94,6 +94,7 @@ export default async function PatientDetailPage({
                   nome: patient.nome,
                   dataNascimento: patient.dataNascimento,
                   dailyNotes: patient.dailyNotes.map((note: any) => ({
+                    id: note.id,
                     data: note.data,
                     horaDormiu: note.horaDormiu,
                     horaAcordou: note.horaAcordou,
