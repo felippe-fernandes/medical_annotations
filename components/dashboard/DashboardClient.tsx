@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DatePicker from "react-datepicker";
 import { Users, FileText, Clock, TrendingUp, Calendar, Activity, Filter } from "lucide-react";
 import Link from "next/link";
@@ -31,11 +31,7 @@ export function DashboardClient() {
 
   const humorEmojis = ["😢", "😟", "😐", "🙂", "😄"];
 
-  useEffect(() => {
-    fetchStats();
-  }, [startDate, endDate]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -51,7 +47,11 @@ export function DashboardClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   if (loading || !stats) {
     return (
