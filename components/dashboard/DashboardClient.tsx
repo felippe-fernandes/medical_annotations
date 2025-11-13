@@ -40,6 +40,13 @@ export function DashboardClient() {
       });
 
       const response = await fetch(`/api/dashboard/stats?${params}`);
+
+      // Se retornar 401, redirecionar para o login
+      if (response.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+
       const data = await response.json();
       setStats(data);
     } catch (error) {
