@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { X, Plus, Trash2, Clock } from "lucide-react";
+import { X, Plus, Trash2, Clock, Pill } from "lucide-react";
 import { formatLocalDate } from "@/lib/dateUtils";
 
 const dailyNoteSchema = z.object({
@@ -69,6 +69,7 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
     initialData?.tags || []
   );
   const [newTagName, setNewTagName] = useState("");
+  const [activeMedications, setActiveMedications] = useState<any[]>([]);
 
   // Função para obter hora atual no timezone GMT-3 (Brasil)
   const getCurrentBrazilTime = () => {
@@ -126,6 +127,57 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
 
   const removeTag = (tag: string) => {
     setSelectedTags((prev) => prev.filter((t) => t !== tag));
+  };
+
+  // Buscar medicamentos ativos
+  useEffect(() => {
+    const fetchMedications = async () => {
+      try {
+        const response = await fetch(`/api/medications?patientId=${patientId}`);
+
+        if (response.status === 401) {
+          try {
+            await fetch("/api/auth/logout", { method: "POST" });
+          } catch (error) {
+            console.error("Erro ao fazer logout:", error);
+          } finally {
+            window.location.href = "/login";
+          }
+          return;
+        }
+
+        const meds = await response.json();
+        setActiveMedications(meds.filter((m: any) => m.ativo));
+      } catch (error) {
+        console.error("Erro ao buscar medicamentos:", error);
+      }
+    };
+
+    fetchMedications();
+  }, [patientId]);
+
+  const addMedicationsToNote = () => {
+    if (activeMedications.length === 0) {
+      alert("Nenhum medicamento ativo encontrado");
+      return;
+    }
+
+    // Adicionar tag "Medicamento" se não existir
+    if (!selectedTags.includes("Medicamento")) {
+      setSelectedTags((prev) => [...prev, "Medicamento"]);
+    }
+
+    // Adicionar lista de medicamentos aos detalhes extras
+    const medsText = activeMedications
+      .map((med) => `- ${med.nome} (${med.dosagem}) - ${med.frequencia}`)
+      .join("\n");
+
+    setValue(
+      "detalhesExtras",
+      `Medicamentos em uso:\n${medsText}\n\n${
+        initialData?.detalhesExtras || ""
+      }`
+    );
   };
 
   // Funções para anotações horárias
@@ -353,6 +405,23 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
             </button>
           ))}
         </div>
+
+        {/* Botão para adicionar medicamentos */}
+        {activeMedications.length > 0 && (
+          <div className="mb-3">
+            <button
+              type="button"
+              onClick={addMedicationsToNote}
+              className="flex items-center gap-2 px-4 py-2 bg-green-700 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+            >
+              <Pill size={16} />
+              Adicionar Medicamentos Ativos ({activeMedications.length})
+            </button>
+            <p className="text-xs text-slate-500 mt-1">
+              Adiciona a tag "Medicamento" e lista os medicamentos ativos nos detalhes
+            </p>
+          </div>
+        )}
 
         {/* Tags selecionadas */}
         {selectedTags.length > 0 && (

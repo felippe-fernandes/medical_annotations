@@ -10,6 +10,7 @@ import { Logo } from "@/components/layout/Logo";
 import { ExportPDFButton } from "@/components/pdf/ExportPDFButton";
 import { GerarResumoIAButton } from "@/components/ai/GerarResumoIAButton";
 import { NotesFilterView } from "@/components/notes/NotesFilterView";
+import { MedicationsManager } from "@/components/medications/MedicationsManager";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function PatientDetailPage({
@@ -114,6 +115,11 @@ export default async function PatientDetailPage({
               />
             </div>
           )}
+        </div>
+
+        {/* Medicamentos */}
+        <div className="mb-6">
+          <MedicationsManager patientId={id} />
         </div>
 
         {/* Lista de Anotações */}
