@@ -418,7 +418,7 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
               Adicionar Medicamentos Ativos ({activeMedications.length})
             </button>
             <p className="text-xs text-slate-500 mt-1">
-              Adiciona a tag "Medicamento" e lista os medicamentos ativos nos detalhes
+              Adiciona a tag &quot;Medicamento&quot; e lista os medicamentos ativos nos detalhes
             </p>
           </div>
         )}

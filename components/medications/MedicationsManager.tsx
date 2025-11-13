@@ -45,6 +45,7 @@ export function MedicationsManager({ patientId, onMedicationAdded }: Medications
 
   useEffect(() => {
     fetchMedications();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
   const fetchMedications = async () => {
