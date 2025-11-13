@@ -36,8 +36,11 @@ export function DashboardClient() {
   const humorEmojis = ["😢", "😟", "😐", "🙂", "😄"];
 
   const fetchStats = useCallback(async (retryCount = 0) => {
-    setLoading(true);
-    setError(null);
+    if (retryCount === 0) {
+      setLoading(true);
+      setError(null);
+    }
+
     try {
       const params = new URLSearchParams({
         startDate: startDate.toISOString(),
@@ -49,6 +52,7 @@ export function DashboardClient() {
       // Se retornar 401, mostrar mensagem de erro
       if (response.status === 401) {
         setIsUnauthorized(true);
+        setLoading(false);
         return;
       }
 
@@ -58,11 +62,12 @@ export function DashboardClient() {
 
       const data = await response.json();
       setStats(data);
+      setLoading(false);
     } catch (err) {
       console.error("Erro ao buscar estatísticas:", err);
 
       // Retry até 3 vezes
-      if (retryCount < 3) {
+      if (retryCount < 2) {
         setTimeout(() => fetchStats(retryCount + 1), 1000 * (retryCount + 1));
       } else {
         setError(
@@ -70,9 +75,6 @@ export function DashboardClient() {
             ? err.message
             : "Erro ao carregar estatísticas. Tente recarregar a página."
         );
-      }
-    } finally {
-      if (retryCount >= 3) {
         setLoading(false);
       }
     }
