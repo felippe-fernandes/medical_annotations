@@ -29,13 +29,15 @@ export function DashboardClient() {
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isUnauthorized, setIsUnauthorized] = useState(false);
 
   const { UnauthorizedScreen } = useUnauthorizedHandler();
   const humorEmojis = ["😢", "😟", "😐", "🙂", "😄"];
 
-  const fetchStats = useCallback(async () => {
+  const fetchStats = useCallback(async (retryCount = 0) => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams({
         startDate: startDate.toISOString(),
@@ -50,12 +52,29 @@ export function DashboardClient() {
         return;
       }
 
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+
       const data = await response.json();
       setStats(data);
-    } catch (error) {
-      console.error("Erro ao buscar estatísticas:", error);
+    } catch (err) {
+      console.error("Erro ao buscar estatísticas:", err);
+
+      // Retry até 3 vezes
+      if (retryCount < 3) {
+        setTimeout(() => fetchStats(retryCount + 1), 1000 * (retryCount + 1));
+      } else {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Erro ao carregar estatísticas. Tente recarregar a página."
+        );
+      }
     } finally {
-      setLoading(false);
+      if (retryCount >= 3) {
+        setLoading(false);
+      }
     }
   }, [startDate, endDate]);
 
@@ -67,10 +86,49 @@ export function DashboardClient() {
     return <UnauthorizedScreen />;
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+        <div className="bg-slate-800 rounded-lg shadow-xl max-w-md w-full p-6">
+          <div className="mb-4">
+            <div className="mx-auto w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center mb-4">
+              <svg
+                className="w-8 h-8 text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+            <h2 className="text-xl font-bold text-slate-100 mb-2 text-center">
+              Erro ao Carregar Dados
+            </h2>
+            <p className="text-slate-400 mb-6 text-center">{error}</p>
+          </div>
+          <button
+            onClick={() => fetchStats()}
+            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Tentar Novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (loading || !stats) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <div className="text-slate-400">Carregando...</div>
+        <div className="flex items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400"></div>
+          <div className="text-slate-400">Carregando estatísticas...</div>
+        </div>
       </div>
     );
   }

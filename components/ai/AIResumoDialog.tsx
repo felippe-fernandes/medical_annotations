@@ -24,7 +24,7 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
 
   // Buscar tags disponíveis quando o componente montar
   useEffect(() => {
-    const fetchTags = async () => {
+    const fetchTags = async (retryCount = 0) => {
       try {
         const response = await fetch(`/api/patients/${patientId}`);
 
@@ -37,6 +37,11 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
           } finally {
             window.location.href = "/login";
           }
+          return;
+        }
+
+        if (!response.ok && retryCount < 3) {
+          setTimeout(() => fetchTags(retryCount + 1), 1000 * (retryCount + 1));
           return;
         }
 
@@ -53,6 +58,9 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
         }
       } catch (err) {
         console.error("Erro ao buscar tags:", err);
+        if (retryCount < 3) {
+          setTimeout(() => fetchTags(retryCount + 1), 1000 * (retryCount + 1));
+        }
       }
     };
 

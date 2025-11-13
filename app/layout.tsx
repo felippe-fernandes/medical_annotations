@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "react-datepicker/dist/react-datepicker.css";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { QueryProvider } from "@/components/providers/QueryProvider";
 
 export const metadata: Metadata = {
   title: "Anotações Médicas",
@@ -34,8 +35,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className="antialiased pb-16 md:pb-0">
-        {children}
-        <BottomNav />
+        <QueryProvider>
+          {children}
+          <BottomNav />
+        </QueryProvider>
       </body>
     </html>
   );

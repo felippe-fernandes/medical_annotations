@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Plus, Pill, Edit2, Trash2, History, X, Check } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface Medication {
   id: string;
@@ -29,8 +30,7 @@ interface MedicationsManagerProps {
 }
 
 export function MedicationsManager({ patientId, onMedicationAdded }: MedicationsManagerProps) {
-  const [medications, setMedications] = useState<Medication[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showHistory, setShowHistory] = useState<string | null>(null);
@@ -43,13 +43,10 @@ export function MedicationsManager({ patientId, onMedicationAdded }: Medications
     motivo: "",
   });
 
-  useEffect(() => {
-    fetchMedications();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [patientId]);
-
-  const fetchMedications = async () => {
-    try {
+  // Query para buscar medicamentos
+  const { data: medications = [], isLoading, error, refetch } = useQuery<Medication[]>({
+    queryKey: ["medications", patientId],
+    queryFn: async () => {
       const response = await fetch(`/api/medications?patientId=${patientId}`);
 
       if (response.status === 401) {
@@ -60,81 +57,113 @@ export function MedicationsManager({ patientId, onMedicationAdded }: Medications
         } finally {
           window.location.href = "/login";
         }
-        return;
+        throw new Error("Unauthorized");
       }
 
-      const data = await response.json();
-      setMedications(data);
-    } catch (error) {
-      console.error("Erro ao buscar medicamentos:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (!response.ok) {
+        throw new Error(`Erro ${response.status}: ${response.statusText}`);
+      }
+
+      return response.json();
+    },
+  });
+
+  // Mutation para criar medicamento
+  const createMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const response = await fetch("/api/medications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ patientId, ...data }),
+      });
+
+      if (response.status === 401) {
+        try {
+          await fetch("/api/auth/logout", { method: "POST" });
+        } finally {
+          window.location.href = "/login";
+        }
+        throw new Error("Unauthorized");
+      }
+
+      if (!response.ok) throw new Error("Erro ao criar medicamento");
+      return response.json();
+    },
+    onSuccess: (newMed) => {
+      queryClient.invalidateQueries({ queryKey: ["medications", patientId] });
+      if (onMedicationAdded) onMedicationAdded(newMed);
+      resetForm();
+    },
+    onError: (error) => {
+      console.error("Erro ao criar medicamento:", error);
+      alert("Erro ao salvar medicamento");
+    },
+  });
+
+  // Mutation para atualizar medicamento
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
+      const response = await fetch(`/api/medications/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, motivo: data.motivo || "Atualização de medicamento" }),
+      });
+
+      if (response.status === 401) {
+        try {
+          await fetch("/api/auth/logout", { method: "POST" });
+        } finally {
+          window.location.href = "/login";
+        }
+        throw new Error("Unauthorized");
+      }
+
+      if (!response.ok) throw new Error("Erro ao atualizar medicamento");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["medications", patientId] });
+      resetForm();
+    },
+    onError: (error) => {
+      console.error("Erro ao atualizar medicamento:", error);
+      alert("Erro ao atualizar medicamento");
+    },
+  });
+
+  // Mutation para deletar medicamento
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/medications/${id}`, { method: "DELETE" });
+
+      if (response.status === 401) {
+        try {
+          await fetch("/api/auth/logout", { method: "POST" });
+        } finally {
+          window.location.href = "/login";
+        }
+        throw new Error("Unauthorized");
+      }
+
+      if (!response.ok) throw new Error("Erro ao deletar medicamento");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["medications", patientId] });
+    },
+    onError: (error) => {
+      console.error("Erro ao deletar medicamento:", error);
+      alert("Erro ao deletar medicamento");
+    },
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      if (editingId) {
-        // Atualizar
-        const response = await fetch(`/api/medications/${editingId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...formData,
-            motivo: formData.motivo || "Atualização de medicamento",
-          }),
-        });
-
-        if (response.status === 401) {
-          try {
-            await fetch("/api/auth/logout", { method: "POST" });
-          } catch (error) {
-            console.error("Erro ao fazer logout:", error);
-          } finally {
-            window.location.href = "/login";
-          }
-          return;
-        }
-
-        const updated = await response.json();
-        setMedications(meds =>
-          meds.map(m => (m.id === editingId ? updated : m))
-        );
-      } else {
-        // Criar
-        const response = await fetch("/api/medications", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            patientId,
-            ...formData,
-          }),
-        });
-
-        if (response.status === 401) {
-          try {
-            await fetch("/api/auth/logout", { method: "POST" });
-          } catch (error) {
-            console.error("Erro ao fazer logout:", error);
-          } finally {
-            window.location.href = "/login";
-          }
-          return;
-        }
-
-        const newMed = await response.json();
-        setMedications([newMed, ...medications]);
-        if (onMedicationAdded) {
-          onMedicationAdded(newMed);
-        }
-      }
-
-      resetForm();
-    } catch (error) {
-      console.error("Erro ao salvar medicamento:", error);
-      alert("Erro ao salvar medicamento");
+    if (editingId) {
+      updateMutation.mutate({ id: editingId, data: formData });
+    } else {
+      createMutation.mutate(formData);
     }
   };
 
@@ -150,60 +179,23 @@ export function MedicationsManager({ patientId, onMedicationAdded }: Medications
     setShowForm(true);
   };
 
-  const handleToggleActive = async (med: Medication) => {
-    try {
-      const response = await fetch(`/api/medications/${med.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ativo: !med.ativo,
-          motivo: !med.ativo ? "Reativado" : "Desativado",
-        }),
-      });
-
-      if (response.status === 401) {
-        try {
-          await fetch("/api/auth/logout", { method: "POST" });
-        } catch (error) {
-          console.error("Erro ao fazer logout:", error);
-        } finally {
-          window.location.href = "/login";
-        }
-        return;
-      }
-
-      const updated = await response.json();
-      setMedications(meds =>
-        meds.map(m => (m.id === med.id ? updated : m))
-      );
-    } catch (error) {
-      console.error("Erro ao atualizar medicamento:", error);
-    }
+  const handleToggleActive = (med: Medication) => {
+    updateMutation.mutate({
+      id: med.id,
+      data: {
+        nome: med.nome,
+        dosagem: med.dosagem,
+        frequencia: med.frequencia,
+        observacoes: med.observacoes || "",
+        motivo: !med.ativo ? "Reativado" : "Desativado",
+        ativo: !med.ativo,
+      } as any,
+    });
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!confirm("Deseja realmente deletar este medicamento?")) return;
-
-    try {
-      const response = await fetch(`/api/medications/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.status === 401) {
-        try {
-          await fetch("/api/auth/logout", { method: "POST" });
-        } catch (error) {
-          console.error("Erro ao fazer logout:", error);
-        } finally {
-          window.location.href = "/login";
-        }
-        return;
-      }
-
-      setMedications(meds => meds.filter(m => m.id !== id));
-    } catch (error) {
-      console.error("Erro ao deletar medicamento:", error);
-    }
+    deleteMutation.mutate(id);
   };
 
   const resetForm = () => {
@@ -221,10 +213,39 @@ export function MedicationsManager({ patientId, onMedicationAdded }: Medications
   const activeMedications = medications.filter(m => m.ativo);
   const inactiveMedications = medications.filter(m => !m.ativo);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="bg-slate-800 rounded-lg p-6">
-        <p className="text-slate-400">Carregando medicamentos...</p>
+        <div className="flex items-center gap-3">
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-400"></div>
+          <p className="text-slate-400">Carregando medicamentos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-slate-800 rounded-lg shadow-lg">
+        <div className="p-6 border-b border-slate-700">
+          <div className="flex items-center gap-2">
+            <Pill size={24} className="text-green-400" />
+            <h2 className="text-xl font-bold text-slate-100">Medicamentos</h2>
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="bg-red-900/20 border border-red-500 rounded-lg p-4">
+            <p className="text-red-400 mb-3">
+              {error instanceof Error ? error.message : "Erro ao carregar medicamentos"}
+            </p>
+            <button
+              onClick={() => refetch()}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+            >
+              Tentar Novamente
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
