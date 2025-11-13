@@ -155,6 +155,18 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
         method: "DELETE",
       });
 
+      // Se retornar 401, redirecionar para o login
+      if (response.status === 401) {
+        try {
+          await fetch("/api/auth/logout", { method: "POST" });
+        } catch (error) {
+          console.error("Erro ao fazer logout:", error);
+        } finally {
+          window.location.href = "/login";
+        }
+        return;
+      }
+
       if (response.ok) {
         setHourlyNotes((prev) => prev.filter((note) => note.id !== id));
       } else {
@@ -190,6 +202,18 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
         }),
       });
 
+      // Se retornar 401, redirecionar para o login
+      if (response.status === 401) {
+        try {
+          await fetch("/api/auth/logout", { method: "POST" });
+        } catch (error) {
+          console.error("Erro ao fazer logout:", error);
+        } finally {
+          window.location.href = "/login";
+        }
+        return;
+      }
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Erro ao salvar anotação");
@@ -200,7 +224,7 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
       // Salvar anotações horárias novas (que não têm ID)
       const newHourlyNotes = hourlyNotes.filter((note) => !note.id);
       for (const hourlyNote of newHourlyNotes) {
-        await fetch(`/api/notes/${result.id}/hourly`, {
+        const hourlyResponse = await fetch(`/api/notes/${result.id}/hourly`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -208,6 +232,18 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
             descricao: hourlyNote.descricao,
           }),
         });
+
+        // Se retornar 401 nas anotações horárias, redirecionar para o login
+        if (hourlyResponse.status === 401) {
+          try {
+            await fetch("/api/auth/logout", { method: "POST" });
+          } catch (error) {
+            console.error("Erro ao fazer logout:", error);
+          } finally {
+            window.location.href = "/login";
+          }
+          return;
+        }
       }
 
       router.push(`/patients/${patientId}/notes/${result.id}`);

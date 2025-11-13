@@ -27,6 +27,19 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
     const fetchTags = async () => {
       try {
         const response = await fetch(`/api/patients/${patientId}`);
+
+        // Se retornar 401, redirecionar para o login
+        if (response.status === 401) {
+          try {
+            await fetch("/api/auth/logout", { method: "POST" });
+          } catch (error) {
+            console.error("Erro ao fazer logout:", error);
+          } finally {
+            window.location.href = "/login";
+          }
+          return;
+        }
+
         const data = await response.json();
 
         if (response.ok && data.dailyNotes) {
@@ -70,6 +83,18 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
           tags: selectedTags.length > 0 ? selectedTags : null,
         }),
       });
+
+      // Se retornar 401, redirecionar para o login
+      if (response.status === 401) {
+        try {
+          await fetch("/api/auth/logout", { method: "POST" });
+        } catch (error) {
+          console.error("Erro ao fazer logout:", error);
+        } finally {
+          window.location.href = "/login";
+        }
+        return;
+      }
 
       const data = await response.json();
 
