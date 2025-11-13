@@ -1,29 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Download, X, Calendar } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Download, X, Calendar, Tag } from "lucide-react";
 import { generatePatientPDF } from "@/lib/pdf-export";
-
-interface HourlyNote {
-  hora: string;
-  descricao: string;
-}
-
-interface DailyNote {
-  data: Date;
-  horaDormiu: string | null;
-  horaAcordou: string | null;
-  humor: number | null;
-  detalhesExtras: string | null;
-  tags: string[];
-  hourlyNotes: HourlyNote[];
-}
-
-interface PatientData {
-  nome: string;
-  dataNascimento: Date | null;
-  dailyNotes: DailyNote[];
-}
+import { parseLocalDate } from "@/lib/dateUtils";
+import type { PatientData } from "@/lib/types";
 
 interface ExportPDFDialogProps {
   patient: PatientData;
@@ -33,22 +14,39 @@ interface ExportPDFDialogProps {
 export function ExportPDFDialog({ patient, onClose }: ExportPDFDialogProps) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+
+  // Extrair todas as tags únicas das anotações do paciente
+  const availableTags = useMemo(() => {
+    const tagsSet = new Set<string>();
+    patient.dailyNotes.forEach((note) => {
+      note.tags.forEach((tag) => tagsSet.add(tag));
+    });
+    return Array.from(tagsSet).sort();
+  }, [patient.dailyNotes]);
+
+  const handleToggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
 
   const handleExport = () => {
     const options: {
       startDate?: Date;
       endDate?: Date;
+      tags?: string[];
     } = {};
 
-    // Criar datas no timezone local (não UTC)
-    // Input date vem como "2025-11-03", precisamos criar como data local
+    // Usar função centralizada para parsing de datas
     if (startDate) {
-      const [year, month, day] = startDate.split('-').map(Number);
-      options.startDate = new Date(year, month - 1, day);
+      options.startDate = parseLocalDate(startDate);
     }
     if (endDate) {
-      const [year, month, day] = endDate.split('-').map(Number);
-      options.endDate = new Date(year, month - 1, day);
+      options.endDate = parseLocalDate(endDate);
+    }
+    if (selectedTags.length > 0) {
+      options.tags = selectedTags;
     }
 
     generatePatientPDF(patient, options);
@@ -129,12 +127,51 @@ export function ExportPDFDialog({ patient, onClose }: ExportPDFDialogProps) {
             )}
           </div>
 
+          {/* Tags Filter */}
+          {availableTags.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-slate-300">
+                <Tag size={18} />
+                <span className="font-medium">Filtrar por Tags</span>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => handleToggleTag(tag)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      selectedTags.includes(tag)
+                        ? "bg-blue-600 text-white"
+                        : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+
+              {selectedTags.length > 0 && (
+                <button
+                  onClick={() => setSelectedTags([])}
+                  className="text-sm text-blue-400 hover:text-blue-300"
+                >
+                  Limpar tags ({selectedTags.length})
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Info */}
           <div className="bg-slate-900 border border-slate-700 rounded-lg p-4">
             <p className="text-sm text-slate-400">
-              {startDate || endDate ? (
+              {startDate || endDate || selectedTags.length > 0 ? (
                 <>
-                  Serão exportadas apenas as anotações do período selecionado.
+                  Serão exportadas apenas as anotações que correspondem aos filtros selecionados
+                  {selectedTags.length > 0 && (
+                    <> (tags: {selectedTags.join(", ")})</>
+                  )}
+                  .
                 </>
               ) : (
                 <>

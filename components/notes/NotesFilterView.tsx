@@ -6,22 +6,8 @@ import { ChevronDown, ChevronRight, Moon, Search, Sun, Tag, X, List, Calendar } 
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { NotesCalendarView } from "./NotesCalendarView";
-
-interface HourlyNote {
-  hora: string;
-  descricao: string;
-}
-
-interface DailyNote {
-  id: string;
-  data: Date;
-  horaDormiu: string | null;
-  horaAcordou: string | null;
-  humor: number | null;
-  detalhesExtras: string | null;
-  tags: string[];
-  hourlyNotes: HourlyNote[];
-}
+import { parseDateToLocal } from "@/lib/dateUtils";
+import type { DailyNote } from "@/lib/types";
 
 interface NotesFilterViewProps {
   patientId: string;
@@ -29,34 +15,6 @@ interface NotesFilterViewProps {
 }
 
 const humorEmojis = ["😢", "😟", "😐", "🙂", "😄"];
-
-// Função helper para parsear datas evitando problemas de timezone
-function parseLocalDate(date: Date | string): Date {
-  // Se já é um Date object válido do JavaScript
-  if (date instanceof Date && !isNaN(date.getTime())) {
-    // Extrair componentes UTC e criar data local
-    const year = date.getUTCFullYear();
-    const month = date.getUTCMonth();
-    const day = date.getUTCDate();
-    return new Date(year, month, day);
-  }
-
-  const dateStr = date.toString();
-
-  if (dateStr.includes('-') && dateStr.includes('T')) {
-    // ISO string: "2025-11-05T00:00:00.000Z"
-    const [datePart] = dateStr.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  } else if (dateStr.includes('-')) {
-    // String simples: "2025-11-05"
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  }
-
-  // Fallback
-  return new Date(date);
-}
 
 export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps) {
   const today = startOfDay(new Date());
@@ -109,7 +67,7 @@ export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps)
     const grouped = new Map<string, DailyNote[]>();
 
     filteredNotes.forEach((note) => {
-      const noteDate = parseLocalDate(note.data);
+      const noteDate = parseDateToLocal(note.data);
       const monthKey = format(noteDate, "yyyy-MM");
 
       if (!grouped.has(monthKey)) {
@@ -123,7 +81,7 @@ export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps)
       .map(([key, notes]) => {
         // Usar a primeira nota do mês para gerar o label (evita problemas de timezone)
         const firstNote = notes[0];
-        const noteDate = parseLocalDate(firstNote.data);
+        const noteDate = parseDateToLocal(firstNote.data);
         const month = format(noteDate, "MMMM", { locale: ptBR }).toLowerCase();
         const year = format(noteDate, "yyyy", { locale: ptBR });
         const monthLabel = `${month} de ${year}`;
@@ -316,7 +274,7 @@ export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps)
                 {isExpanded && (
                   <div className="border-t border-slate-700">
                     {notes.map((note) => {
-                      const noteDate = parseLocalDate(note.data);
+                      const noteDate = parseDateToLocal(note.data);
                       const noteDateStartOfDay = startOfDay(noteDate);
                       const isToday = noteDateStartOfDay.getTime() === today.getTime();
 

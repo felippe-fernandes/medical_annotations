@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import Groq from "groq-sdk";
+import { sanitizeUserInput } from "@/lib/utils/security";
 
 // POST - Gerar resumo com IA das anotações de um paciente
 export async function POST(request: Request) {
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { patientId, startDate, endDate } = body;
+    const { patientId, startDate, endDate, tags } = body;
 
     if (!patientId) {
       return NextResponse.json(
@@ -25,6 +26,14 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+
+    // Construir filtros para a query
+    const dateFilter = startDate && endDate ? {
+      data: {
+        gte: new Date(startDate),
+        lte: new Date(endDate)
+      }
+    } : {};
 
     // Verificar se o paciente pertence ao usuário
     const patient = await prisma.patient.findFirst({
@@ -34,14 +43,7 @@ export async function POST(request: Request) {
       },
       include: {
         dailyNotes: {
-          where: {
-            ...(startDate && endDate ? {
-              data: {
-                gte: new Date(startDate),
-                lte: new Date(endDate)
-              }
-            } : {})
-          },
+          where: dateFilter,
           orderBy: { data: 'desc' },
           include: {
             hourlyNotes: {
@@ -59,9 +61,18 @@ export async function POST(request: Request) {
       );
     }
 
-    if (patient.dailyNotes.length === 0) {
+    // Filtrar notas por tags (se especificado)
+    let filteredNotes = patient.dailyNotes;
+    if (tags && Array.isArray(tags) && tags.length > 0) {
+      filteredNotes = filteredNotes.filter((note: any) => {
+        // Incluir a nota se ela tiver pelo menos uma das tags selecionadas
+        return note.tags.some((tag: string) => tags.includes(tag));
+      });
+    }
+
+    if (filteredNotes.length === 0) {
       return NextResponse.json(
-        { error: "Nenhuma anotação encontrada para o período selecionado" },
+        { error: "Nenhuma anotação encontrada para os filtros selecionados" },
         { status: 400 }
       );
     }
@@ -74,17 +85,17 @@ export async function POST(request: Request) {
       );
     }
 
-    // Preparar dados para a IA
-    const notesData = patient.dailyNotes.map((note: any) => ({
+    // Preparar dados para a IA com sanitização (usando notas filtradas)
+    const notesData = filteredNotes.map((note: any) => ({
       data: note.data.toISOString().split('T')[0],
       horaDormiu: note.horaDormiu,
       horaAcordou: note.horaAcordou,
       humor: note.humor ? ["Muito Ruim", "Ruim", "Neutro", "Bom", "Muito Bom"][note.humor - 1] : null,
-      tags: note.tags,
-      detalhesExtras: note.detalhesExtras,
+      tags: note.tags.map((tag: string) => sanitizeUserInput(tag)),
+      detalhesExtras: note.detalhesExtras ? sanitizeUserInput(note.detalhesExtras) : null,
       hourlyNotes: note.hourlyNotes.map((h: any) => ({
         hora: h.hora,
-        descricao: h.descricao
+        descricao: sanitizeUserInput(h.descricao)
       }))
     }));
 
@@ -93,14 +104,15 @@ export async function POST(request: Request) {
       apiKey: process.env.GROQ_API_KEY
     });
 
-    // Criar prompt para a IA
-    const prompt = `Você é um assistente médico especializado em organizar anotações neurológicas. Gere um relatório profissional e detalhado baseado nas anotações do paciente "${patient.nome}".
+    // Criar prompt para a IA com nome sanitizado
+    const sanitizedPatientName = sanitizeUserInput(patient.nome);
+    const prompt = `Você é um assistente médico especializado em organizar anotações neurológicas. Gere um relatório profissional e detalhado baseado nas anotações do paciente "${sanitizedPatientName}".
 
 FORMATO DO RELATÓRIO (siga este modelo):
 
 ## RELATÓRIO DE ACOMPANHAMENTO NEUROLÓGICO
 
-**Paciente:** ${patient.nome}
+**Paciente:** ${sanitizedPatientName}
 **Período:** [primeira data] a [última data]
 
 ---
@@ -170,11 +182,14 @@ Gere o relatório completo seguindo o formato acima, sendo fiel às informaçõe
     return NextResponse.json({
       resumo,
       patientName: patient.nome,
-      notesCount: patient.dailyNotes.length,
+      notesCount: filteredNotes.length,
       period: startDate && endDate ? {
         start: startDate,
         end: endDate
-      } : null
+      } : null,
+      filters: {
+        tags: tags && tags.length > 0 ? tags : null
+      }
     });
 
   } catch (error) {

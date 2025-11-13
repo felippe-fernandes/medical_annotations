@@ -5,48 +5,12 @@ import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Sun, Moon } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-
-interface HourlyNote {
-  hora: string;
-  descricao: string;
-}
-
-interface DailyNote {
-  id: string;
-  data: Date;
-  horaDormiu: string | null;
-  horaAcordou: string | null;
-  humor: number | null;
-  detalhesExtras: string | null;
-  tags: string[];
-  hourlyNotes: HourlyNote[];
-}
+import { parseDateToLocal } from "@/lib/dateUtils";
+import type { DailyNote } from "@/lib/types";
 
 interface NotesCalendarViewProps {
   patientId: string;
   dailyNotes: DailyNote[];
-}
-
-// Função helper para parsear datas evitando problemas de timezone
-function parseLocalDate(date: Date | string): Date {
-  if (date instanceof Date && !isNaN(date.getTime())) {
-    const year = date.getUTCFullYear();
-    const month = date.getUTCMonth();
-    const day = date.getUTCDate();
-    return new Date(year, month, day);
-  }
-
-  const dateStr = date.toString();
-  if (dateStr.includes('-') && dateStr.includes('T')) {
-    const [datePart] = dateStr.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  } else if (dateStr.includes('-')) {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  }
-
-  return new Date(date);
 }
 
 // Helper para calcular informações do dia
@@ -81,7 +45,7 @@ export function NotesCalendarView({ patientId, dailyNotes }: NotesCalendarViewPr
   const notesByDate = useMemo(() => {
     const map = new Map<string, DailyNote[]>();
     dailyNotes.forEach((note) => {
-      const noteDate = parseLocalDate(note.data);
+      const noteDate = parseDateToLocal(note.data);
       const dateKey = format(noteDate, "yyyy-MM-dd");
       if (!map.has(dateKey)) {
         map.set(dateKey, []);

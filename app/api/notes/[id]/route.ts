@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { validateTags, sanitizeUserInput, validateHumor } from "@/lib/utils/security";
 
 // GET - Buscar anotação por ID
 export async function GET(
@@ -46,7 +47,7 @@ export async function GET(
 
     return NextResponse.json(note);
   } catch (error) {
-    console.error(error);
+    console.error("[API] Erro ao buscar anotação:", error instanceof Error ? error.message : "Erro desconhecido");
     return NextResponse.json(
       { error: "Erro ao buscar anotação" },
       { status: 500 }
@@ -74,15 +75,23 @@ export async function PUT(
     const body = await request.json();
     const { data, horaDormiu, horaAcordou, humor, detalhesExtras, tags } = body;
 
-    // Validar comprimento das tags (máximo 30 caracteres)
+    // Validar tags
     if (tags && Array.isArray(tags)) {
-      const invalidTag = tags.find((tag: string) => tag.length > 30);
-      if (invalidTag) {
+      const validation = validateTags(tags);
+      if (!validation.valid) {
         return NextResponse.json(
-          { error: "Cada tag deve ter no máximo 30 caracteres" },
+          { error: validation.error },
           { status: 400 }
         );
       }
+    }
+
+    // Validar humor
+    if (humor !== undefined && humor !== null && !validateHumor(humor)) {
+      return NextResponse.json(
+        { error: "Humor deve ser um número entre 1 e 5" },
+        { status: 400 }
+      );
     }
 
     // Verificar se a nota existe e pertence ao usuário
@@ -105,13 +114,14 @@ export async function PUT(
       );
     }
 
+    // Sanitizar dados de entrada
     const updateData: any = {
       data: data ? new Date(data) : undefined,
       horaDormiu: horaDormiu !== undefined ? horaDormiu : undefined,
       horaAcordou: horaAcordou !== undefined ? horaAcordou : undefined,
       humor: humor !== undefined ? humor : undefined,
-      detalhesExtras: detalhesExtras !== undefined ? detalhesExtras : undefined,
-      tags: tags !== undefined ? tags : undefined,
+      detalhesExtras: detalhesExtras !== undefined ? sanitizeUserInput(detalhesExtras) : undefined,
+      tags: tags !== undefined ? tags.map((tag: string) => sanitizeUserInput(tag)) : undefined,
     };
 
     const note = await prisma.dailyNote.update({
@@ -121,7 +131,7 @@ export async function PUT(
 
     return NextResponse.json(note);
   } catch (error) {
-    console.error(error);
+    console.error("[API] Erro ao atualizar anotação:", error instanceof Error ? error.message : "Erro desconhecido");
     return NextResponse.json(
       { error: "Erro ao atualizar anotação" },
       { status: 500 }
@@ -173,7 +183,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error(error);
+    console.error("[API] Erro ao deletar anotação:", error instanceof Error ? error.message : "Erro desconhecido");
     return NextResponse.json(
       { error: "Erro ao deletar anotação" },
       { status: 500 }

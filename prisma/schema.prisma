@@ -9,13 +9,14 @@ datasource db {
 }
 
 model Patient {
-  id             String      @id @default(cuid())
+  id             String       @id @default(cuid())
   userId         String
   nome           String
   dataNascimento DateTime?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
   dailyNotes     DailyNote[]
+  medications    Medication[]
 
   @@index([userId])
   @@map("patients")
@@ -51,4 +52,37 @@ model HourlyNote {
 
   @@index([dailyNoteId])
   @@map("hourly_notes")
+}
+
+model Medication {
+  id          String              @id @default(cuid())
+  nome        String
+  dosagem     String
+  frequencia  String
+  observacoes String?
+  ativo       Boolean             @default(true)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  patientId   String
+  patient     Patient             @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  changes     MedicationChange[]
+
+  @@index([patientId])
+  @@index([ativo])
+  @@map("medications")
+}
+
+model MedicationChange {
+  id           String     @id @default(cuid())
+  campo        String     // nome, dosagem, frequencia, observacoes, ativo
+  valorAnterior String?
+  valorNovo    String
+  motivo       String?
+  createdAt    DateTime   @default(now())
+  medicationId String
+  medication   Medication @relation(fields: [medicationId], references: [id], onDelete: Cascade)
+
+  @@index([medicationId])
+  @@index([createdAt])
+  @@map("medication_changes")
 }

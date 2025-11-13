@@ -9,6 +9,37 @@ export function parseLocalDate(dateString: string): Date {
 }
 
 /**
+ * Converte um objeto Date ou string para um objeto Date local
+ * Suporta múltiplos formatos de entrada
+ */
+export function parseDateToLocal(date: Date | string): Date {
+  // Se já é um Date object válido do JavaScript
+  if (date instanceof Date && !isNaN(date.getTime())) {
+    // Extrair componentes UTC e criar data local
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth();
+    const day = date.getUTCDate();
+    return new Date(year, month, day);
+  }
+
+  const dateStr = date.toString();
+
+  if (dateStr.includes('-') && dateStr.includes('T')) {
+    // ISO string: "2025-11-05T00:00:00.000Z"
+    const [datePart] = dateStr.split('T');
+    const [year, month, day] = datePart.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  } else if (dateStr.includes('-')) {
+    // String simples: "2025-11-05"
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  // Fallback
+  return new Date(date);
+}
+
+/**
  * Formata uma data para o formato ISO local (YYYY-MM-DD)
  * sem conversão de fuso horário
  */

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { X, Calendar, Loader2, Sparkles, Download, Eye, Edit2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Calendar, Loader2, Sparkles, Download, Eye, Edit2, Tag } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -14,11 +14,56 @@ interface AIResumoDialogProps {
 export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDialogProps) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [resumo, setResumo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notesCount, setNotesCount] = useState<number>(0);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Buscar tags disponíveis quando o componente montar
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const response = await fetch(`/api/patients/${patientId}`);
+
+        // Se retornar 401, redirecionar para o login
+        if (response.status === 401) {
+          try {
+            await fetch("/api/auth/logout", { method: "POST" });
+          } catch (error) {
+            console.error("Erro ao fazer logout:", error);
+          } finally {
+            window.location.href = "/login";
+          }
+          return;
+        }
+
+        const data = await response.json();
+
+        if (response.ok && data.dailyNotes) {
+          const tagsSet = new Set<string>();
+          data.dailyNotes.forEach((note: any) => {
+            if (note.tags && Array.isArray(note.tags)) {
+              note.tags.forEach((tag: string) => tagsSet.add(tag));
+            }
+          });
+          setAvailableTags(Array.from(tagsSet).sort());
+        }
+      } catch (err) {
+        console.error("Erro ao buscar tags:", err);
+      }
+    };
+
+    fetchTags();
+  }, [patientId]);
+
+  const handleToggleTag = (tag: string) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
 
   const handleGenerateResumo = async () => {
     setLoading(true);
@@ -35,8 +80,21 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
           patientId,
           startDate: startDate || null,
           endDate: endDate || null,
+          tags: selectedTags.length > 0 ? selectedTags : null,
         }),
       });
+
+      // Se retornar 401, redirecionar para o login
+      if (response.status === 401) {
+        try {
+          await fetch("/api/auth/logout", { method: "POST" });
+        } catch (error) {
+          console.error("Erro ao fazer logout:", error);
+        } finally {
+          window.location.href = "/login";
+        }
+        return;
+      }
 
       const data = await response.json();
 
@@ -65,9 +123,10 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
     if (!resumo) return;
 
     try {
-      // Importar bibliotecas dinamicamente
+      // Importar bibliotecas e utilitários dinamicamente
       const { default: jsPDF } = await import("jspdf");
       const autoTable = (await import("jspdf-autotable")).default;
+      const { sanitizeFileName } = await import("@/lib/utils/security");
 
       const doc = new jsPDF() as any;
       const pageWidth = doc.internal.pageSize.getWidth();
@@ -350,8 +409,9 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
         });
       }
 
-      // Salvar PDF
-      const fileName = `resumo_${patientName.replace(/\s+/g, "_")}_${new Date().toISOString().split('T')[0]}.pdf`;
+      // Salvar PDF com nome sanitizado
+      const sanitizedName = sanitizeFileName(patientName);
+      const fileName = `resumo_${sanitizedName}_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
@@ -429,21 +489,62 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
                   Limpar período
                 </button>
               )}
+            </div>
+          )}
 
-              {/* Info */}
-              <div className="bg-slate-900 border border-slate-700 rounded-lg p-4">
-                <p className="text-sm text-slate-400">
-                  {startDate || endDate ? (
-                    <>
-                      A IA analisará apenas as anotações do período selecionado.
-                    </>
-                  ) : (
-                    <>
-                      A IA analisará todas as anotações do paciente.
-                    </>
-                  )}
-                </p>
+          {/* Tags Filter */}
+          {!resumo && availableTags.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-slate-300">
+                <Tag size={18} />
+                <span className="font-medium">Filtrar por Tags (opcional)</span>
               </div>
+
+              <div className="flex flex-wrap gap-2">
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => handleToggleTag(tag)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      selectedTags.includes(tag)
+                        ? "bg-purple-600 text-white"
+                        : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+
+              {selectedTags.length > 0 && (
+                <button
+                  onClick={() => setSelectedTags([])}
+                  className="text-sm text-purple-400 hover:text-purple-300"
+                >
+                  Limpar tags ({selectedTags.length})
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Info */}
+          {!resumo && (
+            <div className="bg-slate-900 border border-slate-700 rounded-lg p-4">
+              <p className="text-sm text-slate-400">
+                {startDate || endDate || selectedTags.length > 0 ? (
+                  <>
+                    A IA analisará apenas as anotações que correspondem aos filtros selecionados
+                    {selectedTags.length > 0 && (
+                      <> (tags: {selectedTags.join(", ")})</>
+                    )}
+                    .
+                  </>
+                ) : (
+                  <>
+                    A IA analisará todas as anotações do paciente.
+                  </>
+                )}
+              </p>
             </div>
           )}
 

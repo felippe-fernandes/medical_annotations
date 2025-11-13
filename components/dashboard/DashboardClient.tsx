@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DatePicker from "react-datepicker";
 import { Users, FileText, Clock, TrendingUp, Calendar, Activity, Filter } from "lucide-react";
 import Link from "next/link";
 import { format, subDays, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useUnauthorizedHandler } from "@/lib/utils/api";
 
 interface DashboardStats {
   totalPatients: number;
@@ -28,14 +29,12 @@ export function DashboardClient() {
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
 
+  const { UnauthorizedScreen } = useUnauthorizedHandler();
   const humorEmojis = ["😢", "😟", "😐", "🙂", "😄"];
 
-  useEffect(() => {
-    fetchStats();
-  }, [startDate, endDate]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -44,6 +43,13 @@ export function DashboardClient() {
       });
 
       const response = await fetch(`/api/dashboard/stats?${params}`);
+
+      // Se retornar 401, mostrar mensagem de erro
+      if (response.status === 401) {
+        setIsUnauthorized(true);
+        return;
+      }
+
       const data = await response.json();
       setStats(data);
     } catch (error) {
@@ -51,7 +57,15 @@ export function DashboardClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  if (isUnauthorized) {
+    return <UnauthorizedScreen />;
+  }
 
   if (loading || !stats) {
     return (

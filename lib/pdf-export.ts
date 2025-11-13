@@ -1,54 +1,14 @@
 import { jsPDF } from "jspdf";
 import { format, startOfDay, endOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { parseDateToLocal } from "@/lib/dateUtils";
+import { sanitizeFileName } from "@/lib/utils/security";
+import type { DailyNote, PatientData } from "@/lib/types";
 
-// Função helper para parsear datas evitando problemas de timezone
-function parseLocalDate(date: Date | string): Date {
-  if (date instanceof Date && !isNaN(date.getTime())) {
-    // Extrair componentes UTC e criar data local
-    const year = date.getUTCFullYear();
-    const month = date.getUTCMonth();
-    const day = date.getUTCDate();
-    return new Date(year, month, day);
-  }
-
-  const dateStr = date.toString();
-  if (dateStr.includes('-') && dateStr.includes('T')) {
-    const [datePart] = dateStr.split('T');
-    const [year, month, day] = datePart.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  } else if (dateStr.includes('-')) {
-    const [year, month, day] = dateStr.split('-').map(Number);
-    return new Date(year, month - 1, day);
-  }
-
-  return new Date(date);
-}
-
-interface HourlyNote {
-  hora: string;
-  descricao: string;
-}
-
-interface DailyNote {
-  data: Date;
-  horaDormiu: string | null;
-  horaAcordou: string | null;
-  humor: number | null;
-  detalhesExtras: string | null;
-  tags: string[];
-  hourlyNotes: HourlyNote[];
-}
-
-interface PatientData {
-  nome: string;
-  dataNascimento: Date | null;
-  dailyNotes: DailyNote[];
-}
-
-interface PDFExportOptions {
+export interface PDFExportOptions {
   startDate?: Date;
   endDate?: Date;
+  tags?: string[];
 }
 
 const humorLabels = ["Muito Ruim", "Ruim", "Neutro", "Bom", "Muito Bom"];
@@ -92,7 +52,7 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
 
   yPosition = 45;
 
-  // Filtrar notas por data
+  // Filtrar notas por data e tags
   let filteredNotes = [...patient.dailyNotes];
 
   if (options.startDate && options.endDate) {
@@ -100,11 +60,19 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
     const filterEnd = endOfDay(options.endDate);
 
     filteredNotes = filteredNotes.filter((note) => {
-      const noteDate = parseLocalDate(note.data);
+      const noteDate = parseDateToLocal(note.data);
       const noteStartOfDay = startOfDay(noteDate);
 
       // Incluir se a nota está entre o início e fim (inclusive)
       return noteStartOfDay >= filterStart && noteStartOfDay <= filterEnd;
+    });
+  }
+
+  // Filtrar por tags (se houver)
+  if (options.tags && options.tags.length > 0) {
+    filteredNotes = filteredNotes.filter((note) => {
+      // Incluir a nota se ela tiver pelo menos uma das tags selecionadas
+      return note.tags.some((tag) => options.tags!.includes(tag));
     });
   }
 
@@ -133,13 +101,22 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
   yPosition += 7;
   doc.text(`Total de Anotações: ${filteredNotes.length}`, margin + 5, yPosition);
 
-  // Informações de filtro
+  // Informações de filtro de data
   if (options.startDate && options.endDate) {
     yPosition += 6;
     doc.setFontSize(10);
     doc.setTextColor(100, 116, 139); // slate-500
     const dateRange = `Período filtrado: ${format(options.startDate, "dd/MM/yyyy")} até ${format(options.endDate, "dd/MM/yyyy")}`;
     doc.text(dateRange, margin + 5, yPosition);
+  }
+
+  // Informações de filtro de tags
+  if (options.tags && options.tags.length > 0) {
+    yPosition += 6;
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139); // slate-500
+    const tagsFilter = `Tags filtradas: ${options.tags.join(", ")}`;
+    doc.text(tagsFilter, margin + 5, yPosition);
   }
 
   yPosition += cardHeight - (patient.dataNascimento ? 23 : 16);
@@ -161,8 +138,8 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
 
   // Ordenar notas por data (mais recente primeiro) e remover duplicatas
   const uniqueNotes = filteredNotes.reduce((acc, note) => {
-    const noteTime = parseLocalDate(note.data).getTime();
-    const exists = acc.some(n => parseLocalDate(n.data).getTime() === noteTime);
+    const noteTime = parseDateToLocal(note.data).getTime();
+    const exists = acc.some(n => parseDateToLocal(n.data).getTime() === noteTime);
     if (!exists) {
       acc.push(note);
     }
@@ -170,12 +147,15 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
   }, [] as DailyNote[]);
 
   const sortedNotes = uniqueNotes.sort(
-    (a, b) => parseLocalDate(b.data).getTime() - parseLocalDate(a.data).getTime()
+    (a, b) => parseDateToLocal(b.data).getTime() - parseDateToLocal(a.data).getTime()
   );
 
   sortedNotes.forEach((note, index) => {
     // Card para cada nota - começar desenhando a borda externa
-    const noteDate = parseLocalDate(note.data);
+    const noteDate = parseDateToLocal(note.data);
+
+    // Verificar se a anotação está incompleta (falta hora de dormir OU acordar)
+    const isIncomplete = !note.horaDormiu || !note.horaAcordou;
 
     // Calcular altura total do card primeiro
     let totalCardHeight = 13; // header height
@@ -210,14 +190,22 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
 
     const cardStartY = yPosition;
 
-    // Desenhar borda externa do card
-    doc.setDrawColor(203, 213, 225); // slate-300
+    // Desenhar borda externa do card (laranja se incompleto, cinza se completo)
+    if (isIncomplete) {
+      doc.setDrawColor(251, 191, 36); // amber-400 - para anotações incompletas
+    } else {
+      doc.setDrawColor(203, 213, 225); // slate-300 - para anotações completas
+    }
     doc.setLineWidth(0.5);
     doc.roundedRect(margin, cardStartY, contentWidth, totalCardHeight, 2, 2, "S");
     doc.setLineWidth(0.2);
 
-    // Cabeçalho da nota com fundo cinza
-    doc.setFillColor(241, 245, 249); // slate-100
+    // Cabeçalho da nota com fundo cinza (ou laranja claro se incompleta)
+    if (isIncomplete) {
+      doc.setFillColor(254, 243, 199); // amber-100 - para anotações incompletas
+    } else {
+      doc.setFillColor(241, 245, 249); // slate-100 - para anotações completas
+    }
     doc.setDrawColor(203, 213, 225); // slate-300
     doc.rect(margin, cardStartY, contentWidth, 11, "F");
 
@@ -343,8 +331,8 @@ export function generatePatientPDF(patient: PatientData, options: PDFExportOptio
     );
   }
 
-  // Salvar PDF
-  let fileName = patient.nome.replace(/\s+/g, "_");
+  // Salvar PDF com nome sanitizado
+  let fileName = sanitizeFileName(patient.nome);
 
   // Adicionar período filtrado ao nome se houver
   if (options.startDate && options.endDate) {

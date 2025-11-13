@@ -3,27 +3,7 @@
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { ExportPDFDialog } from "./ExportPDFDialog";
-
-interface HourlyNote {
-  hora: string;
-  descricao: string;
-}
-
-interface DailyNote {
-  data: Date;
-  horaDormiu: string | null;
-  horaAcordou: string | null;
-  humor: number | null;
-  detalhesExtras: string | null;
-  tags: string[];
-  hourlyNotes: HourlyNote[];
-}
-
-interface PatientData {
-  nome: string;
-  dataNascimento: Date | null;
-  dailyNotes: DailyNote[];
-}
+import type { PatientData } from "@/lib/types";
 
 interface ExportPDFButtonProps {
   patient: PatientData;
