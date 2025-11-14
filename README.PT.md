@@ -156,49 +156,14 @@ Supabase            Database Hosting
 
 ## 🎭 Conta Demo
 
-**Para recrutadores e avaliadores:** Experimente o app com dados demo pré-populados!
-
-### Credenciais de Acesso
+**Para recrutadores e avaliadores:** Uma conta de teste está disponível para explorar o app!
 
 ```
 Email: teste@teste.com
 Senha: 12345678
 ```
 
-### O que está incluído
-
-A conta demo inclui:
-- **3 Pacientes de Exemplo** com perfis diferentes
-- **~30 Dias de Anotações Médicas** (último mês até hoje)
-- **Anotações Diárias** com humor, padrões de sono e tags variadas
-- **Registros Horários** ao longo do dia
-- **5 Medicamentos** com histórico de alterações
-- **Dados Médicos Realistas** para avaliação
-
-### Configurando Dados Demo (Para Desenvolvimento Local)
-
-Se você está rodando o projeto localmente e quer popular dados demo:
-
-1. **Crie o usuário demo no Supabase:**
-   - Acesse seu Supabase Dashboard
-   - Navegue até **Authentication** > **Users**
-   - Clique em **Add User** > **Create New User**
-   - Email: `teste@teste.com`
-   - Senha: `12345678`
-   - Habilite **Auto Confirm User**
-   - Copie o **User ID** gerado
-
-2. **Execute o script de seed demo:**
-   ```bash
-   DEMO_USER_ID=seu-user-id-copiado npm run seed:demo
-   ```
-
-3. **Faça login e explore:**
-   - Acesse http://localhost:3000
-   - Faça login com `teste@teste.com` / `12345678`
-   - Explore o dashboard, pacientes e funcionalidades
-
-**Nota:** O script de dados demo é idempotente - você pode executá-lo múltiplas vezes para atualizar os dados demo.
+Esta conta inclui pacientes de exemplo com anotações médicas, medicamentos e dados realistas para avaliação.
 
 ## 🚀 Início Rápido
 
@@ -479,7 +444,6 @@ npm run lint              # Lint code
 
 # Seed
 npm run seed              # Seed database (if needed)
-npm run seed:demo         # Popular dados demo (requer DEMO_USER_ID)
 ```
 
 ## 🤝 Contribuindo
