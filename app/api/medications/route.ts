@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
-// GET - Listar todos os medicamentos de um paciente
+// GET - List all medications for a patient
 export async function GET(request: Request) {
   const supabase = await createClient();
   const {
@@ -23,7 +23,6 @@ export async function GET(request: Request) {
     );
   }
 
-  // Verificar se o paciente pertence ao usuário
   const patient = await prisma.patient.findUnique({
     where: { id: patientId },
   });
@@ -37,11 +36,11 @@ export async function GET(request: Request) {
     include: {
       changes: {
         orderBy: { createdAt: "desc" },
-        take: 5, // Últimas 5 alterações
+        take: 5,
       },
     },
     orderBy: [
-      { ativo: "desc" }, // Ativos primeiro
+      { ativo: "desc" },
       { createdAt: "desc" },
     ],
   });
@@ -49,7 +48,7 @@ export async function GET(request: Request) {
   return NextResponse.json(medications);
 }
 
-// POST - Criar novo medicamento
+// POST - Create new medication
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
@@ -70,7 +69,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // Verificar se o paciente pertence ao usuário
   const patient = await prisma.patient.findUnique({
     where: { id: patientId },
   });

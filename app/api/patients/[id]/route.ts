@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
-// GET - Buscar paciente por ID
+// GET - Get patient by ID
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -49,7 +49,7 @@ export async function GET(
   }
 }
 
-// PUT - Atualizar paciente
+// PUT - Update patient
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -69,7 +69,6 @@ export async function PUT(
     const body = await request.json();
     const { nome, dataNascimento } = body;
 
-    // Verificar se o paciente pertence ao usuário
     const existingPatient = await prisma.patient.findFirst({
       where: { id, userId: user.id }
     });
@@ -99,7 +98,7 @@ export async function PUT(
   }
 }
 
-// DELETE - Deletar paciente
+// DELETE - Delete patient
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -117,7 +116,6 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Verificar se o paciente pertence ao usuário
     const existingPatient = await prisma.patient.findFirst({
       where: { id, userId: user.id }
     });

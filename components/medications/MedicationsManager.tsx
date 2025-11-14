@@ -1,8 +1,8 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, Edit2, History, Pill, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
-import { Plus, Pill, Edit2, Trash2, History, X, Check } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface Medication {
   id: string;
@@ -43,7 +43,6 @@ export function MedicationsManager({ patientId, onMedicationAdded }: Medications
     motivo: "",
   });
 
-  // Query para buscar medicamentos
   const { data: medications = [], isLoading, error, refetch } = useQuery<Medication[]>({
     queryKey: ["medications", patientId],
     queryFn: async () => {
@@ -68,7 +67,6 @@ export function MedicationsManager({ patientId, onMedicationAdded }: Medications
     },
   });
 
-  // Mutation para criar medicamento
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       const response = await fetch("/api/medications", {
@@ -100,7 +98,6 @@ export function MedicationsManager({ patientId, onMedicationAdded }: Medications
     },
   });
 
-  // Mutation para atualizar medicamento
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
       const response = await fetch(`/api/medications/${id}`, {
@@ -131,7 +128,6 @@ export function MedicationsManager({ patientId, onMedicationAdded }: Medications
     },
   });
 
-  // Mutation para deletar medicamento
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       const response = await fetch(`/api/medications/${id}`, { method: "DELETE" });
@@ -436,11 +432,10 @@ function MedicationCard({
 }: MedicationCardProps) {
   return (
     <div
-      className={`p-4 rounded-lg border ${
-        medication.ativo
+      className={`p-4 rounded-lg border ${medication.ativo
           ? "bg-slate-900 border-green-700"
           : "bg-slate-900/50 border-slate-700 opacity-60"
-      }`}
+        }`}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
@@ -494,11 +489,10 @@ function MedicationCard({
           </button>
           <button
             onClick={() => onToggleActive(medication)}
-            className={`p-2 rounded transition-colors ${
-              medication.ativo
+            className={`p-2 rounded transition-colors ${medication.ativo
                 ? "text-slate-400 hover:text-orange-400 hover:bg-slate-800"
                 : "text-slate-400 hover:text-green-400 hover:bg-slate-800"
-            }`}
+              }`}
             title={medication.ativo ? "Desativar" : "Reativar"}
           >
             {medication.ativo ? <X size={18} /> : <Check size={18} />}

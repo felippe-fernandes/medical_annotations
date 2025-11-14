@@ -1,8 +1,8 @@
-import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import { Plus } from "lucide-react";
 import { Logo } from "@/components/layout/Logo";
+import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { Plus } from "lucide-react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function PatientsPage() {
@@ -45,7 +45,7 @@ export default async function PatientsPage() {
           </Link>
         </div>
 
-        {/* Lista de Pacientes */}
+        {/* Patients List */}
         {patients.length === 0 ? (
           <div className="bg-slate-800 rounded-lg shadow p-8 text-center">
             <p className="text-slate-500 mb-4">Nenhum paciente cadastrado ainda</p>

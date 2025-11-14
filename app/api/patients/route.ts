@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
-// GET - Listar todos os pacientes
+// GET - List all patients
 export async function GET() {
   try {
     const supabase = await createClient();
@@ -34,7 +34,7 @@ export async function GET() {
   }
 }
 
-// POST - Criar novo paciente
+// POST - Create new patient
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();

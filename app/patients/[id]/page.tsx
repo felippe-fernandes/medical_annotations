@@ -1,17 +1,17 @@
+import { GerarResumoIAButton } from "@/components/ai/GenerateIASummaryButton";
+import { Logo } from "@/components/layout/Logo";
+import { MedicationsManager } from "@/components/medications/MedicationsManager";
+import { NotesFilterView } from "@/components/notes/NotesFilterView";
+import { StartDailyNote } from "@/components/notes/StartDailyNote";
+import { ExportPDFButton } from "@/components/pdf/ExportPDFButton";
+import { DeleteButton } from "@/components/ui/DeleteButton";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { ArrowLeft, Calendar } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { DeleteButton } from "@/components/ui/DeleteButton";
-import { StartDailyNote } from "@/components/notes/StartDailyNote";
-import { Logo } from "@/components/layout/Logo";
-import { ExportPDFButton } from "@/components/pdf/ExportPDFButton";
-import { GerarResumoIAButton } from "@/components/ai/GerarResumoIAButton";
-import { NotesFilterView } from "@/components/notes/NotesFilterView";
-import { MedicationsManager } from "@/components/medications/MedicationsManager";
-import { createClient } from "@/lib/supabase/server";
 
 export default async function PatientDetailPage({
   params,
@@ -47,7 +47,6 @@ export default async function PatientDetailPage({
     notFound();
   }
 
-  // Verificar se o paciente pertence ao usuário
   if (patient.userId !== user.id) {
     notFound();
   }
@@ -84,7 +83,7 @@ export default async function PatientDetailPage({
           />
         </div>
 
-        {/* Botões de Ação */}
+        {/* Actions Buttons */}
         <div className="space-y-3 mb-6">
           <StartDailyNote patientId={id} />
 
@@ -117,12 +116,12 @@ export default async function PatientDetailPage({
           )}
         </div>
 
-        {/* Medicamentos */}
+        {/* Medications */}
         <div className="mb-6">
           <MedicationsManager patientId={id} />
         </div>
 
-        {/* Lista de Anotações */}
+        {/* Daily Notes */}
         {patient.dailyNotes.length === 0 ? (
           <div className="bg-slate-800 rounded-lg shadow p-8 text-center">
             <Calendar size={48} className="mx-auto text-slate-600 mb-3" />

@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
-// POST - Criar novo registro horário
+// POST - Create new hourly note
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -29,7 +29,6 @@ export async function POST(
       );
     }
 
-    // Verificar se a anotação diária existe e pertence ao usuário
     const dailyNote = await prisma.dailyNote.findUnique({
       where: { id },
       include: { patient: true }

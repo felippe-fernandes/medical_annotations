@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { parseLocalDate } from "@/lib/dateUtils";
+import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
-// POST - Criar nova anotação
+// POST - Create new note
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -26,7 +26,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validar comprimento das tags (máximo 30 caracteres)
     if (tags && Array.isArray(tags)) {
       const invalidTag = tags.find((tag: string) => tag.length > 30);
       if (invalidTag) {
@@ -37,7 +36,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Verificar se o paciente pertence ao usuário
     const patient = await prisma.patient.findFirst({
       where: { id: patientId, userId: user.id }
     });
@@ -49,7 +47,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verificar se já existe uma anotação para este dia
     const noteDate = parseLocalDate(data);
     const startOfDay = new Date(noteDate);
     startOfDay.setHours(0, 0, 0, 0);

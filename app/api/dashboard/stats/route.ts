@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { startOfDay, subDays } from "date-fns";
+import { NextResponse } from "next/server";
 
+// GET - Get dashboard statistics
 export async function GET(request: Request) {
-  // Verificar autenticação
   const supabase = await createClient();
   const {
     data: { user },
@@ -14,18 +14,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
   }
 
-  // Obter parâmetros de data da URL
   const { searchParams } = new URL(request.url);
   const startDateParam = searchParams.get("startDate");
   const endDateParam = searchParams.get("endDate");
 
-  // Definir intervalo de datas (padrão: últimos 30 dias)
   const endDate = endDateParam ? new Date(endDateParam) : new Date();
   const startDate = startDateParam
     ? new Date(startDateParam)
     : startOfDay(subDays(endDate, 30));
 
-  // Estatísticas gerais (sem filtro de data)
   const totalPatients = await prisma.patient.count({
     where: { userId: user.id },
   });
@@ -44,7 +41,6 @@ export async function GET(request: Request) {
     },
   });
 
-  // Estatísticas filtradas por data
   const filteredNotes = await prisma.dailyNote.count({
     where: {
       patient: { userId: user.id },
@@ -55,7 +51,6 @@ export async function GET(request: Request) {
     },
   });
 
-  // Anotações de hoje
   const today = startOfDay(new Date());
   const todayNotes = await prisma.dailyNote.count({
     where: {
@@ -66,7 +61,6 @@ export async function GET(request: Request) {
     },
   });
 
-  // Últimos 7 dias
   const sevenDaysAgo = startOfDay(subDays(new Date(), 7));
   const recentNotes = await prisma.dailyNote.count({
     where: {
@@ -77,7 +71,6 @@ export async function GET(request: Request) {
     },
   });
 
-  // Média de humor no período selecionado
   const notesWithHumor = await prisma.dailyNote.findMany({
     where: {
       patient: { userId: user.id },
@@ -97,12 +90,11 @@ export async function GET(request: Request) {
   const avgHumor =
     notesWithHumor.length > 0
       ? (
-          notesWithHumor.reduce((sum: number, note: any) => sum + (note.humor || 0), 0) /
-          notesWithHumor.length
-        ).toFixed(1)
+        notesWithHumor.reduce((sum: number, note: any) => sum + (note.humor || 0), 0) /
+        notesWithHumor.length
+      ).toFixed(1)
       : null;
 
-  // Últimas anotações (limitado ao período)
   const latestNotes = await prisma.dailyNote.findMany({
     where: {
       patient: { userId: user.id },
@@ -118,7 +110,6 @@ export async function GET(request: Request) {
     },
   });
 
-  // Pacientes com mais anotações no período
   const patientsWithNotes = await prisma.patient.findMany({
     where: {
       userId: user.id,

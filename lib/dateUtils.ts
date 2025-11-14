@@ -4,7 +4,6 @@
  */
 export function parseLocalDate(dateString: string): Date {
   const [year, month, day] = dateString.split('-').map(Number);
-  // Cria a data no horário local (meio-dia para evitar problemas de fuso)
   return new Date(year, month - 1, day, 12, 0, 0, 0);
 }
 
@@ -13,9 +12,7 @@ export function parseLocalDate(dateString: string): Date {
  * Suporta múltiplos formatos de entrada
  */
 export function parseDateToLocal(date: Date | string): Date {
-  // Se já é um Date object válido do JavaScript
   if (date instanceof Date && !isNaN(date.getTime())) {
-    // Extrair componentes UTC e criar data local
     const year = date.getUTCFullYear();
     const month = date.getUTCMonth();
     const day = date.getUTCDate();
@@ -25,17 +22,14 @@ export function parseDateToLocal(date: Date | string): Date {
   const dateStr = date.toString();
 
   if (dateStr.includes('-') && dateStr.includes('T')) {
-    // ISO string: "2025-11-05T00:00:00.000Z"
     const [datePart] = dateStr.split('T');
     const [year, month, day] = datePart.split('-').map(Number);
     return new Date(year, month - 1, day);
   } else if (dateStr.includes('-')) {
-    // String simples: "2025-11-05"
     const [year, month, day] = dateStr.split('-').map(Number);
     return new Date(year, month - 1, day);
   }
 
-  // Fallback
   return new Date(date);
 }
 

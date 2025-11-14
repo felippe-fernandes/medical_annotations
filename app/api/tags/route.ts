@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
-// Este endpoint foi descontinuado
-// Tags agora são strings simples armazenadas como array em DailyNote.tags
-// Não há mais uma tabela separada para tags
+// This endpoint has been discontinued
+// Tags are now simple strings stored as an array in DailyNote.tags
+// There is no longer a separate table for tags
 
 export async function GET() {
   const supabase = await createClient();
@@ -16,14 +16,12 @@ export async function GET() {
     );
   }
 
-  // Retornar array vazio para compatibilidade
-  // O frontend deve usar tags diretamente dos inputs
   return NextResponse.json([]);
 }
 
 export async function POST() {
   return NextResponse.json(
     { error: "Endpoint descontinuado - tags são criadas diretamente nas anotações" },
-    { status: 410 } // 410 Gone
+    { status: 410 }
   );
 }
