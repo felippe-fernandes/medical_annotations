@@ -16,6 +16,7 @@
 - [About](#-about)
 - [Features](#-features)
 - [Tech Stack](#-tech-stack)
+- [Demo Account](#-demo-account)
 - [Quick Start](#-quick-start)
 - [Project Structure](#-project-structure)
 - [Database Schema](#-database-schema)
@@ -152,6 +153,52 @@ Vercel              Production Hosting
 GitHub Actions      Automated Testing
 Supabase            Database Hosting
 ```
+
+## 🎭 Demo Account
+
+**For recruiters and evaluators:** Try the app with pre-populated demo data!
+
+### Access Credentials
+
+```
+Email: teste@teste.com
+Password: 12345678
+```
+
+### What's Included
+
+The demo account includes:
+- **3 Sample Patients** with different profiles
+- **~30 Days of Medical Notes** (last month to today)
+- **Daily Notes** with varied mood, sleep patterns, and tags
+- **Hourly Records** throughout the day
+- **5 Medications** with change history
+- **Realistic Medical Data** for evaluation
+
+### Setting Up Demo Data (For Local Development)
+
+If you're running the project locally and want to populate demo data:
+
+1. **Create the demo user in Supabase:**
+   - Go to your Supabase Dashboard
+   - Navigate to **Authentication** > **Users**
+   - Click **Add User** > **Create New User**
+   - Email: `teste@teste.com`
+   - Password: `12345678`
+   - Enable **Auto Confirm User**
+   - Copy the generated **User ID**
+
+2. **Run the demo seed script:**
+   ```bash
+   DEMO_USER_ID=your-copied-user-id npm run seed:demo
+   ```
+
+3. **Login and explore:**
+   - Access http://localhost:3000
+   - Login with `teste@teste.com` / `12345678`
+   - Explore the dashboard, patients, and features
+
+**Note:** The demo data script is idempotent - you can run it multiple times to refresh the demo data.
 
 ## 🚀 Quick Start
 
@@ -432,6 +479,7 @@ npm run lint              # Lint code
 
 # Seed
 npm run seed              # Seed database (if needed)
+npm run seed:demo         # Populate demo data (requires DEMO_USER_ID)
 ```
 
 ## 🤝 Contributing
