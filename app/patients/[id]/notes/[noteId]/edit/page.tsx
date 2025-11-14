@@ -1,10 +1,10 @@
+import { Logo } from "@/components/layout/Logo";
+import { DailyNoteForm } from "@/components/notes/DailyNoteForm";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { DailyNoteForm } from "@/components/notes/DailyNoteForm";
-import { Logo } from "@/components/layout/Logo";
-import { createClient } from "@/lib/supabase/server";
 
 export default async function EditNotePage({
   params,
@@ -36,7 +36,6 @@ export default async function EditNotePage({
     notFound();
   }
 
-  // Verificar se a nota pertence ao usuário
   if (note.patient.userId !== user.id) {
     notFound();
   }

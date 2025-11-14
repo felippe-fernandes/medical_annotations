@@ -1,13 +1,13 @@
 "use client";
 
+import { parseDateToLocal } from "@/lib/dateUtils";
+import type { DailyNote } from "@/lib/types";
 import { format, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronDown, ChevronRight, Moon, Search, Sun, Tag, X, List, Calendar } from "lucide-react";
+import { Calendar, ChevronDown, ChevronRight, List, Moon, Search, Sun, Tag, X } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { NotesCalendarView } from "./NotesCalendarView";
-import { parseDateToLocal } from "@/lib/dateUtils";
-import type { DailyNote } from "@/lib/types";
 
 interface NotesFilterViewProps {
   patientId: string;
@@ -62,7 +62,6 @@ export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps)
     });
   }, [dailyNotes, selectedTag, searchText]);
 
-  // Agrupar notas por mês
   const notesByMonth = useMemo(() => {
     const grouped = new Map<string, DailyNote[]>();
 
@@ -76,10 +75,8 @@ export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps)
       grouped.get(monthKey)!.push(note);
     });
 
-    // Converter para array e ordenar por mês (mais recente primeiro)
     return Array.from(grouped.entries())
       .map(([key, notes]) => {
-        // Usar a primeira nota do mês para gerar o label (evita problemas de timezone)
         const firstNote = notes[0];
         const noteDate = parseDateToLocal(firstNote.data);
         const month = format(noteDate, "MMMM", { locale: ptBR }).toLowerCase();
@@ -125,22 +122,20 @@ export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps)
         <div className="flex items-center rounded-lg bg-slate-700 p-1">
           <button
             onClick={() => setViewMode("list")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              viewMode === "list"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === "list"
                 ? "bg-slate-800 text-slate-100"
                 : "text-slate-400 hover:text-slate-100"
-            }`}
+              }`}
           >
             <List size={16} />
             <span className="hidden sm:inline">Lista</span>
           </button>
           <button
             onClick={() => setViewMode("calendar")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              viewMode === "calendar"
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === "calendar"
                 ? "bg-slate-800 text-slate-100"
                 : "text-slate-400 hover:text-slate-100"
-            }`}
+              }`}
           >
             <Calendar size={16} />
             <span className="hidden sm:inline">Calendário</span>
@@ -151,62 +146,62 @@ export function NotesFilterView({ patientId, dailyNotes }: NotesFilterViewProps)
       {/* Filtros - apenas para listagem */}
       {viewMode === "list" && (
         <div className="bg-slate-800 rounded-lg shadow p-4 space-y-3">
-        {/* Busca de texto */}
-        <div className="relative">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Buscar em anotações..."
-            className="w-full pl-10 pr-10 py-2 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          {searchText && (
+          {/* Busca de texto */}
+          <div className="relative">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Buscar em anotações..."
+              className="w-full pl-10 pr-10 py-2 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            {searchText && (
+              <button
+                onClick={() => setSearchText("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+
+          {/* Filtro de tag */}
+          {allTags.length > 0 && (
+            <div className="relative">
+              <Tag size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <select
+                value={selectedTag}
+                onChange={(e) => setSelectedTag(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Todas as tags</option>
+                {allTags.map((tag) => (
+                  <option key={tag} value={tag}>
+                    {tag}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Botão para limpar filtros */}
+          {hasActiveFilters && (
             <button
-              onClick={() => setSearchText("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
+              onClick={() => {
+                setSearchText("");
+                setSelectedTag("");
+              }}
+              className="w-full py-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
-              <X size={18} />
+              Limpar filtros
             </button>
           )}
-        </div>
 
-        {/* Filtro de tag */}
-        {allTags.length > 0 && (
-          <div className="relative">
-            <Tag size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <select
-              value={selectedTag}
-              onChange={(e) => setSelectedTag(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Todas as tags</option>
-              {allTags.map((tag) => (
-                <option key={tag} value={tag}>
-                  {tag}
-                </option>
-              ))}
-            </select>
+          {/* Contador de resultados */}
+          <div className="text-sm text-slate-400 text-center">
+            {filteredNotes.length} {filteredNotes.length === 1 ? "anotação encontrada" : "anotações encontradas"}
           </div>
-        )}
-
-        {/* Botão para limpar filtros */}
-        {hasActiveFilters && (
-          <button
-            onClick={() => {
-              setSearchText("");
-              setSelectedTag("");
-            }}
-            className="w-full py-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
-          >
-            Limpar filtros
-          </button>
-        )}
-
-        {/* Contador de resultados */}
-        <div className="text-sm text-slate-400 text-center">
-          {filteredNotes.length} {filteredNotes.length === 1 ? "anotação encontrada" : "anotações encontradas"}
-        </div>
         </div>
       )}
 

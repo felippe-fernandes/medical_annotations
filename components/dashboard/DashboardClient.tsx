@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import DatePicker from "react-datepicker";
-import { Users, FileText, Clock, TrendingUp, Calendar, Activity, Filter } from "lucide-react";
-import Link from "next/link";
-import { format, subDays, startOfDay } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { useUnauthorizedHandler } from "@/lib/utils/api";
+import { format, startOfDay, subDays } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Activity, Calendar, Clock, FileText, Filter, TrendingUp, Users } from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import DatePicker from "react-datepicker";
 
 interface DashboardStats {
   totalPatients: number;
@@ -49,7 +49,6 @@ export function DashboardClient() {
 
       const response = await fetch(`/api/dashboard/stats?${params}`);
 
-      // Se retornar 401, mostrar mensagem de erro
       if (response.status === 401) {
         setIsUnauthorized(true);
         setLoading(false);
@@ -66,7 +65,6 @@ export function DashboardClient() {
     } catch (err) {
       console.error("Erro ao buscar estatísticas:", err);
 
-      // Retry até 3 vezes
       if (retryCount < 2) {
         setTimeout(() => fetchStats(retryCount + 1), 1000 * (retryCount + 1));
       } else {

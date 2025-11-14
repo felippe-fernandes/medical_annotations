@@ -1,5 +1,5 @@
-import { Logo } from "@/components/layout/Logo";
 import { DashboardClient } from "@/components/dashboard/DashboardClient";
+import { Logo } from "@/components/layout/Logo";
 
 export default function DashboardPage() {
   return (

@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
-// DELETE - Deletar registro horário
+// DELETE - Delete hourly note
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string; hourlyId: string }> }
@@ -20,7 +20,6 @@ export async function DELETE(
 
     const { hourlyId } = await params;
 
-    // Verificar se o registro horário existe e pertence ao usuário
     const hourlyNote = await prisma.hourlyNote.findUnique({
       where: { id: hourlyId },
       include: {

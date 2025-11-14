@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, Calendar, Loader2, Sparkles, Download, Eye, Edit2, Tag } from "lucide-react";
+import { Calendar, Download, Edit2, Eye, Loader2, Sparkles, Tag, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-interface AIResumoDialogProps {
+interface AISummaryDialogProps {
   patientId: string;
   patientName: string;
   onClose: () => void;
 }
 
-export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDialogProps) {
+export function AISummaryDialog({ patientId, patientName, onClose }: AISummaryDialogProps) {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -22,7 +22,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
   const [notesCount, setNotesCount] = useState<number>(0);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Buscar tags disponíveis quando o componente montar
   useEffect(() => {
     const fetchTags = async (retryCount = 0) => {
       try {
@@ -92,7 +91,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
         }),
       });
 
-      // Se retornar 401, redirecionar para o login
       if (response.status === 401) {
         try {
           await fetch("/api/auth/logout", { method: "POST" });
@@ -122,7 +120,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
   const handleCopyResumo = () => {
     if (resumo) {
       navigator.clipboard.writeText(resumo);
-      // Poderia adicionar um toast aqui
     }
   };
 
@@ -131,7 +128,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
     if (!resumo) return;
 
     try {
-      // Importar bibliotecas e utilitários dinamicamente
       const { default: jsPDF } = await import("jspdf");
       const autoTable = (await import("jspdf-autotable")).default;
       const { sanitizeFileName } = await import("@/lib/utils/security");
@@ -142,7 +138,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
       const contentWidth = pageWidth - (margin * 2);
       let yPosition = margin;
 
-      // Função auxiliar para adicionar texto com quebra de linha
       const addText = (text: string, fontSize: number, isBold: boolean, color: number[] = [0, 0, 0]) => {
         doc.setFontSize(fontSize);
         doc.setFont(undefined, isBold ? 'bold' : 'normal');
@@ -163,7 +158,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
         doc.setFont(undefined, 'normal');
       };
 
-      // Processar markdown linha por linha
       const lines = resumo.split('\n');
       let inTable = false;
       let tableData: string[][] = [];
@@ -172,25 +166,21 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
 
-        // Pular linhas vazias
         if (!line) {
           yPosition += 3;
           continue;
         }
 
-        // Detectar início de tabela
         if (line.startsWith('|') && !inTable) {
           inTable = true;
           tableHeaders = line.split('|').map(c => c.trim()).filter(c => c && c !== '---' && !c.includes(':---'));
           continue;
         }
 
-        // Linha de separação da tabela
         if (line.includes('|') && line.includes(':---')) {
           continue;
         }
 
-        // Processar linhas da tabela
         if (inTable && line.startsWith('|')) {
           const cells = line.split('|').map(c => c.trim().replace(/\*\*/g, '')).filter(c => c);
           if (cells.length > 0) {
@@ -199,7 +189,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
           continue;
         }
 
-        // Fim da tabela - renderizar
         if (inTable && !line.startsWith('|')) {
           if (tableData.length > 0) {
             autoTable(doc, {
@@ -229,7 +218,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
           tableHeaders = [];
         }
 
-        // Headers H2 (##)
         if (line.startsWith('## ')) {
           if (yPosition > 250) {
             doc.addPage();
@@ -241,7 +229,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
           continue;
         }
 
-        // Headers H3 (###)
         if (line.startsWith('### ')) {
           if (yPosition > 255) {
             doc.addPage();
@@ -253,7 +240,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
           continue;
         }
 
-        // Headers H4 (####)
         if (line.startsWith('#### ')) {
           if (yPosition > 260) {
             doc.addPage();
@@ -265,7 +251,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
           continue;
         }
 
-        // Texto que é só bold (ex: **03/11**) - tratar como sub-heading
         if (/^\*\*[^*]+\*\*$/.test(line)) {
           if (yPosition > 260) {
             doc.addPage();
@@ -282,7 +267,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
           continue;
         }
 
-        // Linha horizontal (---)
         if (line === '---') {
           if (yPosition > 265) {
             doc.addPage();
@@ -294,7 +278,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
           continue;
         }
 
-        // Bullet points
         if (line.startsWith('* ') || line.startsWith('- ')) {
           if (yPosition > 260) {
             doc.addPage();
@@ -303,7 +286,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
 
           const text = line.replace(/^[*-] /, '');
 
-          // Processar bold
           const segments = text.split(/(\*\*[^*]+\*\*)/g);
           doc.setFontSize(10);
           let xPos = margin + 4;
@@ -349,7 +331,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
           continue;
         }
 
-        // Texto normal com suporte a bold
         if (yPosition > 260) {
           doc.addPage();
           yPosition = margin;
@@ -397,7 +378,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
         yPosition += 5;
       }
 
-      // Renderizar tabela final se houver
       if (inTable && tableData.length > 0) {
         autoTable(doc, {
           startY: yPosition,
@@ -417,7 +397,6 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
         });
       }
 
-      // Salvar PDF com nome sanitizado
       const sanitizedName = sanitizeFileName(patientName);
       const fileName = `resumo_${sanitizedName}_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
@@ -513,11 +492,10 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
                   <button
                     key={tag}
                     onClick={() => handleToggleTag(tag)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      selectedTags.includes(tag)
-                        ? "bg-purple-600 text-white"
-                        : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                    }`}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${selectedTags.includes(tag)
+                      ? "bg-purple-600 text-white"
+                      : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                      }`}
                   >
                     {tag}
                   </button>
@@ -585,22 +563,20 @@ export function AIResumoDialog({ patientId, patientName, onClose }: AIResumoDial
                   <div className="flex items-center rounded-lg bg-slate-700 p-1">
                     <button
                       onClick={() => setIsEditing(false)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition-colors ${
-                        !isEditing
-                          ? "bg-slate-600 text-white"
-                          : "text-slate-300 hover:text-white"
-                      }`}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition-colors ${!isEditing
+                        ? "bg-slate-600 text-white"
+                        : "text-slate-300 hover:text-white"
+                        }`}
                     >
                       <Eye size={16} />
                       <span className="hidden sm:inline">Visualizar</span>
                     </button>
                     <button
                       onClick={() => setIsEditing(true)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition-colors ${
-                        isEditing
-                          ? "bg-slate-600 text-white"
-                          : "text-slate-300 hover:text-white"
-                      }`}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded transition-colors ${isEditing
+                        ? "bg-slate-600 text-white"
+                        : "text-slate-300 hover:text-white"
+                        }`}
                     >
                       <Edit2 size={16} />
                       <span className="hidden sm:inline">Editar</span>

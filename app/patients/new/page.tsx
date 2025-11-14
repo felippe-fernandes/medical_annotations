@@ -1,7 +1,7 @@
+import { Logo } from "@/components/layout/Logo";
 import { PatientForm } from "@/components/patients/PatientForm";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { Logo } from "@/components/layout/Logo";
 
 export default function NewPatientPage() {
   return (

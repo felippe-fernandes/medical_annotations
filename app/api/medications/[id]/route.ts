@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
-// PUT - Atualizar medicamento (registra mudança)
+// PUT - Update medication (logs changes)
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -20,7 +20,6 @@ export async function PUT(
   const body = await request.json();
   const { nome, dosagem, frequencia, observacoes, ativo, motivo } = body;
 
-  // Verificar se o medicamento existe e pertence ao usuário
   const existingMed = await prisma.medication.findUnique({
     where: { id },
     include: { patient: true },
@@ -30,7 +29,6 @@ export async function PUT(
     return NextResponse.json({ error: "Medicamento não encontrado" }, { status: 404 });
   }
 
-  // Registrar mudanças
   const changes: any[] = [];
 
   if (nome && nome !== existingMed.nome) {
@@ -78,7 +76,6 @@ export async function PUT(
     });
   }
 
-  // Atualizar medicamento e registrar mudanças
   const medication = await prisma.medication.update({
     where: { id },
     data: {
@@ -104,7 +101,7 @@ export async function PUT(
   return NextResponse.json(medication);
 }
 
-// DELETE - Deletar medicamento
+// DELETE - Delete medication
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -120,7 +117,6 @@ export async function DELETE(
 
   const { id } = await params;
 
-  // Verificar se o medicamento existe e pertence ao usuário
   const existingMed = await prisma.medication.findUnique({
     where: { id },
     include: { patient: true },

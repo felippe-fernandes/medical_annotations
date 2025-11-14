@@ -1,12 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { X, Plus, Trash2, Clock, Pill } from "lucide-react";
 import { formatLocalDate } from "@/lib/dateUtils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Clock, Pill, Plus, Trash2, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 const dailyNoteSchema = z.object({
   data: z.string().min(1, "Data é obrigatória"),
@@ -19,7 +19,6 @@ const dailyNoteSchema = z.object({
 
 type DailyNoteFormData = z.infer<typeof dailyNoteSchema>;
 
-// Tags pré-definidas comuns
 const COMMON_TAGS = [
   "Ansiedade",
   "Estresse",
@@ -71,17 +70,14 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
   const [newTagName, setNewTagName] = useState("");
   const [activeMedications, setActiveMedications] = useState<any[]>([]);
 
-  // Função para obter hora atual no timezone GMT-3 (Brasil)
   const getCurrentBrazilTime = () => {
     const now = new Date();
-    // Ajustar para GMT-3
     const brazilTime = new Date(now.getTime() - (3 * 60 * 60 * 1000));
     const hours = brazilTime.getUTCHours().toString().padStart(2, '0');
     const minutes = brazilTime.getUTCMinutes().toString().padStart(2, '0');
     return `${hours}:${minutes}`;
   };
 
-  // Anotações horárias
   const [hourlyNotes, setHourlyNotes] = useState<HourlyNote[]>(
     initialData?.hourlyNotes || []
   );
@@ -174,8 +170,7 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
 
     setValue(
       "detalhesExtras",
-      `Medicamentos em uso:\n${medsText}\n\n${
-        initialData?.detalhesExtras || ""
+      `Medicamentos em uso:\n${medsText}\n\n${initialData?.detalhesExtras || ""
       }`
     );
   };
@@ -367,11 +362,10 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
                 setSelectedHumor(option.value);
                 setValue("humor", option.value);
               }}
-              className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${
-                selectedHumor === option.value
+              className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${selectedHumor === option.value
                   ? "border-blue-500 bg-blue-50"
                   : "border-slate-700 hover:border-slate-600"
-              }`}
+                }`}
             >
               <span className="text-3xl">{option.emoji}</span>
               <span className="text-xs text-slate-400">{option.label}</span>
@@ -395,11 +389,10 @@ export function DailyNoteForm({ patientId, initialData }: DailyNoteFormProps) {
               key={tag}
               type="button"
               onClick={() => toggleTag(tag)}
-              className={`px-3 py-1 rounded-full text-sm transition-all ${
-                selectedTags.includes(tag)
+              className={`px-3 py-1 rounded-full text-sm transition-all ${selectedTags.includes(tag)
                   ? "bg-blue-600 text-white"
                   : "bg-slate-700 text-slate-300 hover:bg-slate-600"
-              }`}
+                }`}
             >
               {tag}
             </button>

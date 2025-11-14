@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
-import { validateTags, sanitizeUserInput, validateHumor } from "@/lib/utils/security";
+import { sanitizeUserInput, validateHumor, validateTags } from "@/lib/utils/security";
+import { NextResponse } from "next/server";
 
-// GET - Buscar anotação por ID
+// GET - Get note by ID
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -37,7 +37,6 @@ export async function GET(
       );
     }
 
-    // Verificar se o paciente pertence ao usuário
     if (note.patient.userId !== user.id) {
       return NextResponse.json(
         { error: "Não autorizado" },
@@ -55,7 +54,7 @@ export async function GET(
   }
 }
 
-// PUT - Atualizar anotação
+// PUT - Update note
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -75,7 +74,6 @@ export async function PUT(
     const body = await request.json();
     const { data, horaDormiu, horaAcordou, humor, detalhesExtras, tags } = body;
 
-    // Validar tags
     if (tags && Array.isArray(tags)) {
       const validation = validateTags(tags);
       if (!validation.valid) {
@@ -86,7 +84,6 @@ export async function PUT(
       }
     }
 
-    // Validar humor
     if (humor !== undefined && humor !== null && !validateHumor(humor)) {
       return NextResponse.json(
         { error: "Humor deve ser um número entre 1 e 5" },
@@ -94,7 +91,6 @@ export async function PUT(
       );
     }
 
-    // Verificar se a nota existe e pertence ao usuário
     const existingNote = await prisma.dailyNote.findUnique({
       where: { id },
       include: { patient: true }
@@ -114,7 +110,6 @@ export async function PUT(
       );
     }
 
-    // Sanitizar dados de entrada
     const updateData: any = {
       data: data ? new Date(data) : undefined,
       horaDormiu: horaDormiu !== undefined ? horaDormiu : undefined,
@@ -139,7 +134,7 @@ export async function PUT(
   }
 }
 
-// DELETE - Deletar anotação
+// DELETE - Delete note
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -157,7 +152,6 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Verificar se a nota existe e pertence ao usuário
     const existingNote = await prisma.dailyNote.findUnique({
       where: { id },
       include: { patient: true }

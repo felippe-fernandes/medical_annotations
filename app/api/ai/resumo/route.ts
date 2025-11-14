@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
-import Groq from "groq-sdk";
 import { sanitizeUserInput } from "@/lib/utils/security";
+import Groq from "groq-sdk";
+import { NextResponse } from "next/server";
 
-// POST - Gerar resumo com IA das anotações de um paciente
+// POST - Generate AI summary of a patient's notes
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
@@ -27,7 +27,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Construir filtros para a query
     const dateFilter = startDate && endDate ? {
       data: {
         gte: new Date(startDate),
@@ -35,7 +34,6 @@ export async function POST(request: Request) {
       }
     } : {};
 
-    // Verificar se o paciente pertence ao usuário
     const patient = await prisma.patient.findFirst({
       where: {
         id: patientId,
@@ -61,11 +59,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Filtrar notas por tags (se especificado)
     let filteredNotes = patient.dailyNotes;
     if (tags && Array.isArray(tags) && tags.length > 0) {
       filteredNotes = filteredNotes.filter((note: any) => {
-        // Incluir a nota se ela tiver pelo menos uma das tags selecionadas
         return note.tags.some((tag: string) => tags.includes(tag));
       });
     }
@@ -77,7 +73,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Verificar se a chave da API está configurada
     if (!process.env.GROQ_API_KEY) {
       return NextResponse.json(
         { error: "Chave da API do Groq não configurada. Configure GROQ_API_KEY no arquivo .env" },
@@ -85,7 +80,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Preparar dados para a IA com sanitização (usando notas filtradas)
     const notesData = filteredNotes.map((note: any) => ({
       data: note.data.toISOString().split('T')[0],
       horaDormiu: note.horaDormiu,
@@ -99,12 +93,10 @@ export async function POST(request: Request) {
       }))
     }));
 
-    // Inicializar cliente Groq
     const groq = new Groq({
       apiKey: process.env.GROQ_API_KEY
     });
 
-    // Criar prompt para a IA com nome sanitizado
     const sanitizedPatientName = sanitizeUserInput(patient.nome);
     const prompt = `Você é um assistente médico especializado em organizar anotações neurológicas. Gere um relatório profissional e detalhado baseado nas anotações do paciente "${sanitizedPatientName}".
 
@@ -160,7 +152,6 @@ ${JSON.stringify(notesData, null, 2)}
 
 Gere o relatório completo seguindo o formato acima, sendo fiel às informações registradas.`;
 
-    // Chamar API do Groq
     const chatCompletion = await groq.chat.completions.create({
       messages: [
         {
@@ -172,9 +163,9 @@ Gere o relatório completo seguindo o formato acima, sendo fiel às informaçõe
           content: prompt
         }
       ],
-      model: "llama-3.3-70b-versatile", // Modelo gratuito e rápido
-      temperature: 0.3, // Ligeiramente criativo para organização mas fiel aos dados
-      max_tokens: 4000, // Aumentado para relatórios mais completos
+      model: "llama-3.3-70b-versatile",
+      temperature: 0.3,
+      max_tokens: 4000,
     });
 
     const resumo = chatCompletion.choices[0]?.message?.content || "";

@@ -1,12 +1,12 @@
+import { Logo } from "@/components/layout/Logo";
+import { DeleteButton } from "@/components/ui/DeleteButton";
 import { prisma } from "@/lib/prisma";
-import { ArrowLeft, Moon, Sun, Clock, Edit } from "lucide-react";
-import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { DeleteButton } from "@/components/ui/DeleteButton";
-import { Logo } from "@/components/layout/Logo";
-import { createClient } from "@/lib/supabase/server";
+import { ArrowLeft, Clock, Edit, Moon, Sun } from "lucide-react";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 
 const humorEmojis = ["😢", "😟", "😐", "🙂", "😄"];
 const humorLabels = ["Muito Ruim", "Ruim", "Neutro", "Bom", "Muito Bom"];
@@ -41,24 +41,20 @@ export default async function NoteDetailPage({
     notFound();
   }
 
-  // Verificar se a nota pertence ao usuário
   if (note.patient.userId !== user.id) {
     notFound();
   }
 
-  // Verificar se a anotação está vazia
   const isEmpty = !note.horaDormiu && !note.horaAcordou && !note.humor &&
-                  !note.detalhesExtras && note.tags.length === 0 && note.hourlyNotes.length === 0;
+    !note.detalhesExtras && note.tags.length === 0 && note.hourlyNotes.length === 0;
 
   return (
     <div className="min-h-screen bg-slate-900">
       <div className="max-w-2xl mx-auto p-4">
-        {/* Logo */}
         <div className="mb-4">
           <Logo />
         </div>
 
-        {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <Link
             href={`/patients/${id}`}
@@ -86,7 +82,6 @@ export default async function NoteDetailPage({
           />
         </div>
 
-        {/* Mensagem se estiver vazio */}
         {isEmpty ? (
           <div className="bg-slate-800 rounded-lg shadow p-8 text-center mb-6">
             <Edit size={48} className="mx-auto text-slate-600 mb-3" />
@@ -104,76 +99,76 @@ export default async function NoteDetailPage({
           </div>
         ) : (
           <>
-            {/* Card Principal */}
+            {/* Main Card */}
             <div className="bg-slate-800 rounded-lg shadow p-6 mb-6">
-          {/* Tags */}
-          {note.tags && note.tags.length > 0 && (
-            <div className="mb-6 pb-6 border-b border-slate-700">
-              <p className="text-sm text-slate-500 mb-3">Tags</p>
-              <div className="flex flex-wrap gap-2">
-                {note.tags.map((tag: any, index: number) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded-full text-sm"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Sono */}
-          {(note.horaDormiu || note.horaAcordou) && (
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              {note.horaAcordou && (
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-amber-950 rounded-lg">
-                    <Sun size={24} className="text-amber-400" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Acordou</p>
-                    <p className="text-lg font-semibold text-slate-100">{note.horaAcordou}</p>
+              {/* Tags */}
+              {note.tags && note.tags.length > 0 && (
+                <div className="mb-6 pb-6 border-b border-slate-700">
+                  <p className="text-sm text-slate-500 mb-3">Tags</p>
+                  <div className="flex flex-wrap gap-2">
+                    {note.tags.map((tag: any, index: number) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded-full text-sm"
+                      >
+                        {tag}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}
-              {note.horaDormiu && (
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-indigo-950 rounded-lg">
-                    <Moon size={24} className="text-indigo-400" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">Dormiu</p>
-                    <p className="text-lg font-semibold text-slate-100">{note.horaDormiu}</p>
+
+              {/* Sono */}
+              {(note.horaDormiu || note.horaAcordou) && (
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  {note.horaAcordou && (
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 bg-amber-950 rounded-lg">
+                        <Sun size={24} className="text-amber-400" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Acordou</p>
+                        <p className="text-lg font-semibold text-slate-100">{note.horaAcordou}</p>
+                      </div>
+                    </div>
+                  )}
+                  {note.horaDormiu && (
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 bg-indigo-950 rounded-lg">
+                        <Moon size={24} className="text-indigo-400" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Dormiu</p>
+                        <p className="text-lg font-semibold text-slate-100">{note.horaDormiu}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Mood */}
+              {note.humor && (
+                <div className="mb-6">
+                  <p className="text-sm text-slate-500 mb-2">Humor</p>
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl">{humorEmojis[note.humor - 1]}</span>
+                    <span className="text-lg font-medium text-slate-100">
+                      {humorLabels[note.humor - 1]}
+                    </span>
                   </div>
                 </div>
               )}
-            </div>
-          )}
 
-          {/* Humor */}
-          {note.humor && (
-            <div className="mb-6">
-              <p className="text-sm text-slate-500 mb-2">Humor</p>
-              <div className="flex items-center gap-3">
-                <span className="text-4xl">{humorEmojis[note.humor - 1]}</span>
-                <span className="text-lg font-medium text-slate-100">
-                  {humorLabels[note.humor - 1]}
-                </span>
-              </div>
+              {/* Extra Details */}
+              {note.detalhesExtras && (
+                <div>
+                  <p className="text-sm text-slate-500 mb-2">Detalhes</p>
+                  <p className="text-slate-300 whitespace-pre-wrap">{note.detalhesExtras}</p>
+                </div>
+              )}
             </div>
-          )}
 
-          {/* Detalhes Extras */}
-          {note.detalhesExtras && (
-            <div>
-              <p className="text-sm text-slate-500 mb-2">Detalhes</p>
-              <p className="text-slate-300 whitespace-pre-wrap">{note.detalhesExtras}</p>
-            </div>
-          )}
-        </div>
-
-            {/* Registros Horários */}
+            {/* Hourly Notes */}
             {note.hourlyNotes.length > 0 && (
               <div className="bg-slate-800 rounded-lg shadow p-6">
                 <div className="flex items-center justify-between mb-4">

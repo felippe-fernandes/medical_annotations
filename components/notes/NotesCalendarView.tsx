@@ -1,29 +1,26 @@
 "use client";
 
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, Sun, Moon } from "lucide-react";
-import Link from "next/link";
-import { useMemo, useState } from "react";
 import { parseDateToLocal } from "@/lib/dateUtils";
 import type { DailyNote } from "@/lib/types";
+import { addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfMonth, startOfWeek, subMonths } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { ChevronLeft, ChevronRight, Moon, Sun } from "lucide-react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 
 interface NotesCalendarViewProps {
   patientId: string;
   dailyNotes: DailyNote[];
 }
 
-// Helper para calcular informações do dia
 function getDayInfo(notes: DailyNote[]) {
   if (notes.length === 0) return null;
 
-  // Calcular humor médio
   const humoresValidos = notes.filter(n => n.humor !== null).map(n => n.humor!);
   const humorMedio = humoresValidos.length > 0
     ? Math.round(humoresValidos.reduce((sum, h) => sum + h, 0) / humoresValidos.length)
     : null;
 
-  // Pegar horários de sono (primeira nota com horários)
   const notaComSono = notes.find(n => n.horaAcordou || n.horaDormiu);
   const horaAcordou = notaComSono?.horaAcordou;
   const horaDormiu = notaComSono?.horaDormiu;
@@ -31,7 +28,6 @@ function getDayInfo(notes: DailyNote[]) {
   return { humorMedio, horaAcordou, horaDormiu };
 }
 
-// Emoji de humor baseado no valor
 function getHumorEmoji(humor: number): string {
   const emojis = ["😢", "😟", "😐", "🙂", "😄"];
   return emojis[humor - 1] || "😐";
@@ -41,7 +37,6 @@ export function NotesCalendarView({ patientId, dailyNotes }: NotesCalendarViewPr
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const today = new Date();
 
-  // Criar mapa de notas por data
   const notesByDate = useMemo(() => {
     const map = new Map<string, DailyNote[]>();
     dailyNotes.forEach((note) => {
@@ -55,11 +50,10 @@ export function NotesCalendarView({ patientId, dailyNotes }: NotesCalendarViewPr
     return map;
   }, [dailyNotes]);
 
-  // Gerar dias do calendário
   const calendarDays = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
-    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 }); // Domingo
+    const calendarStart = startOfWeek(monthStart, { weekStartsOn: 0 });
     const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
 
     return eachDayOfInterval({ start: calendarStart, end: calendarEnd });
@@ -138,19 +132,17 @@ export function NotesCalendarView({ patientId, dailyNotes }: NotesCalendarViewPr
             return (
               <div
                 key={day.toString()}
-                className={`min-h-[100px] bg-slate-900 px-2 py-2 ${
-                  !isCurrentMonth ? "relative before:absolute before:inset-0 before:bg-slate-800/50" : ""
-                }`}
+                className={`min-h-[100px] bg-slate-900 px-2 py-2 ${!isCurrentMonth ? "relative before:absolute before:inset-0 before:bg-slate-800/50" : ""
+                  }`}
               >
                 <time
                   dateTime={format(day, "yyyy-MM-dd")}
-                  className={`relative inline-flex items-center justify-center w-6 h-6 ${
-                    isToday
+                  className={`relative inline-flex items-center justify-center w-6 h-6 ${isToday
                       ? "rounded-full bg-blue-500 font-semibold text-white"
                       : isCurrentMonth
-                      ? "text-slate-100"
-                      : "text-slate-500"
-                  }`}
+                        ? "text-slate-100"
+                        : "text-slate-500"
+                    }`}
                 >
                   {format(day, "d")}
                 </time>

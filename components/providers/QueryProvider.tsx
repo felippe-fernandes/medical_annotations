@@ -9,11 +9,11 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            retry: 2, // Reduzido para 2 tentativas (total de 3 com a primeira)
+            retry: 2,
             retryDelay: (attemptIndex) => Math.min(1000 * (attemptIndex + 1), 5000),
-            staleTime: 5 * 60 * 1000, // 5 minutos
+            staleTime: 5 * 60 * 1000,
             refetchOnWindowFocus: false,
-            networkMode: 'always', // Sempre tenta fazer a requisição
+            networkMode: 'always',
           },
         },
       })
