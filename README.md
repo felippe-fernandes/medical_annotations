@@ -5,6 +5,7 @@
 [![CI](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/ci.yml/badge.svg)](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/ci.yml)
 [![E2E Tests](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/e2e.yml/badge.svg)](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Built with Claude Code](https://img.shields.io/badge/Built%20with-Claude%20Code-5B3FFF?logo=anthropic&logoColor=white)](https://claude.ai/claude-code)
 
 🌐 **Live Demo:** [medical-annotations.vercel.app](https://medical-annotations.vercel.app)
 
@@ -37,6 +38,7 @@ Med Notes is a Progressive Web App (PWA) developed for healthcare professionals 
 📄 **PDF Export** - Generate professional reports
 🏷️ **Flexible Tags** - Organize notes with custom tags
 💊 **Medication Management** - Complete change history tracking
+⚡ **Built with Claude Code** - AI-powered development assistant
 
 ## ✨ Features
 
@@ -455,10 +457,12 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 
 ## 🤖 AI-Assisted Development
 
-This project was developed with the assistance of AI tools:
+This project was developed with the assistance of AI tools **for study and learning purposes**:
 
 - **[Claude Code](https://claude.com/claude-code)** - Development assistant that helped with feature implementation, testing, and project architecture
 - **[Groq](https://groq.com)** - Ultra-fast inference API with LLaMA 3.3 70B for generating professional medical summaries
+
+> **📚 Educational Purpose:** This project serves as a practical example of how AI-powered development tools can accelerate learning and implementation of modern web technologies.
 
 ### How AI was used
 

@@ -5,8 +5,11 @@
 [![CI](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/ci.yml/badge.svg)](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/ci.yml)
 [![E2E Tests](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/e2e.yml/badge.svg)](https://github.com/felippe-fernandes/medical_annotations/actions/workflows/e2e.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Desenvolvido com Claude Code](https://img.shields.io/badge/Desenvolvido%20com-Claude%20Code-5B3FFF?logo=anthropic&logoColor=white)](https://claude.ai/claude-code)
 
 🌐 **Deploy:** [medical-annotations.vercel.app](https://medical-annotations.vercel.app)
+
+📖 **[Read in English](README.md)**
 
 ## 📖 Índice
 
@@ -35,6 +38,7 @@ Med Notes é uma aplicação Progressive Web App (PWA) desenvolvida para profiss
 📄 **Export PDF** - Gere relatórios profissionais
 🏷️ **Tags Flexíveis** - Organize anotações com tags personalizadas
 💊 **Gestão de Medicamentos** - Histórico completo de alterações
+⚡ **Desenvolvido com Claude Code** - Assistente de desenvolvimento com IA
 
 ## ✨ Funcionalidades
 
@@ -453,10 +457,12 @@ Este projeto está sob a licença MIT. Veja [LICENSE](LICENSE) para mais detalhe
 
 ## 🤖 Desenvolvimento Assistido por IA
 
-Este projeto foi desenvolvido com auxílio de ferramentas de IA:
+Este projeto foi desenvolvido com auxílio de ferramentas de IA **para fins de estudo e aprendizagem**:
 
 - **[Claude Code](https://claude.com/claude-code)** - Assistente de desenvolvimento que ajudou na implementação das funcionalidades, testes e arquitetura do projeto
 - **[Groq](https://groq.com)** - API de inferência ultra-rápida com LLaMA 3.3 70B para geração de resumos médicos profissionais
+
+> **📚 Propósito Educacional:** Este projeto serve como exemplo prático de como ferramentas de desenvolvimento assistidas por IA podem acelerar o aprendizado e a implementação de tecnologias web modernas.
 
 ### Como a IA foi utilizada
 
