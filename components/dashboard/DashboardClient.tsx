@@ -1,5 +1,6 @@
 "use client";
 
+import { LatestNote, PatientsWithNotes } from "@/lib/types";
 import { useUnauthorizedHandler } from "@/lib/utils/api";
 import { format, startOfDay, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -16,8 +17,8 @@ interface DashboardStats {
   todayNotes: number;
   recentNotes: number;
   avgHumor: string | null;
-  latestNotes: any[];
-  patientsWithNotes: any[];
+  latestNotes: LatestNote[];
+  patientsWithNotes: PatientsWithNotes[];
   dateRange: {
     startDate: string;
     endDate: string;
@@ -28,6 +29,7 @@ export function DashboardClient() {
   const [startDate, setStartDate] = useState<Date>(startOfDay(subDays(new Date(), 30)));
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  console.log("🚀 | stats:", stats)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isUnauthorized, setIsUnauthorized] = useState(false);
@@ -280,10 +282,11 @@ export function DashboardClient() {
                 <p className="text-slate-500 text-center py-8">Nenhuma anotação no período</p>
               ) : (
                 <div className="space-y-4">
-                  {stats.latestNotes.map((note) => (
-                    <Link
+                  {stats.latestNotes.map((note) => {
+                    console.log("🚀 | note:", note)
+                    return <Link
                       key={note.id}
-                      href={`/patients/${note.patientId}/notes/${note.id}`}
+                      href={`/patients/${note.patient.id}/notes/${note.id}`}
                       className="block p-4 bg-slate-900 rounded-lg hover:bg-slate-700 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
@@ -299,13 +302,12 @@ export function DashboardClient() {
                       </div>
                       {note.tags && note.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-2">
-                          {note.tags.map((dailyNoteTag: any) => (
+                          {note.tags.map((tag, idx) => (
                             <span
-                              key={dailyNoteTag.tag.id}
-                              style={{ backgroundColor: dailyNoteTag.tag.cor }}
+                              key={idx + tag}
                               className="inline-block px-2 py-0.5 text-white rounded-full text-xs"
                             >
-                              {dailyNoteTag.tag.nome}
+                              {tag}
                             </span>
                           ))}
                         </div>
@@ -315,8 +317,8 @@ export function DashboardClient() {
                           {note.detalhesExtras}
                         </p>
                       )}
-                    </Link>
-                  ))}
+                    </Link>;
+                  })}
                 </div>
               )}
             </div>
