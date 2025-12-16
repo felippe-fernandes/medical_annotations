@@ -63,4 +63,4 @@ Para recrutadores e avaliadores que desejam explorar a aplicação com dados pre
 
 **Felippe Fernandes**
 - GitHub: [@felippe-fernandes](https://github.com/felippe-fernandes)
-- LinkedIn: [Felippe Fernandes](https://www.linkedin.com/in/felippe-fernandes/)
+- LinkedIn: [Felippe Fernandes](https://www.linkedin.com/in/fernandes-felippe/)
