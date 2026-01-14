@@ -71,7 +71,7 @@ export function ExportPDFDialog({ patient, onClose }: ExportPDFDialogProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6 pb-20 md:pb-6">
+        <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto pb-20">
           {/* Paciente Info */}
           <div>
             <p className="text-sm text-slate-400 mb-1">Paciente</p>

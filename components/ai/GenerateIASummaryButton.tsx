@@ -1,8 +1,9 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AISummaryDialog } from "./AiSummaryDialog";
+import { useUI } from "@/components/providers/UIProvider";
 
 interface GerarResumoIAButtonProps {
   patientId: string;
@@ -11,6 +12,12 @@ interface GerarResumoIAButtonProps {
 
 export function GerarResumoIAButton({ patientId, patientName }: GerarResumoIAButtonProps) {
   const [showDialog, setShowDialog] = useState(false);
+  const { setDialogOpen } = useUI();
+
+  useEffect(() => {
+    setDialogOpen(true);
+    return () => setDialogOpen(false);
+  }, [setDialogOpen]);
 
   return (
     <>
@@ -26,7 +33,10 @@ export function GerarResumoIAButton({ patientId, patientName }: GerarResumoIABut
         <AISummaryDialog
           patientId={patientId}
           patientName={patientName}
-          onClose={() => setShowDialog(false)}
+          onClose={() => {
+            setShowDialog(false);
+            setDialogOpen(false);
+          }}
         />
       )}
     </>
