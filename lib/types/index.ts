@@ -1,5 +1,15 @@
 // Tipos compartilhados da aplicação
 
+export interface LatestNote extends DailyNote {
+  patient: Patient;
+}
+
+export interface PatientsWithNotes extends Patient {
+  _count: {
+    dailyNotes: number;
+  };
+}
+
 export interface HourlyNote {
   id?: string;
   hora: string;
