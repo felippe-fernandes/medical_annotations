@@ -29,7 +29,6 @@ export function DashboardClient() {
   const [startDate, setStartDate] = useState<Date>(startOfDay(subDays(new Date(), 30)));
   const [endDate, setEndDate] = useState<Date>(new Date());
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  console.log("🚀 | stats:", stats)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isUnauthorized, setIsUnauthorized] = useState(false);
@@ -283,7 +282,6 @@ export function DashboardClient() {
               ) : (
                 <div className="space-y-4">
                   {stats.latestNotes.map((note) => {
-                    console.log("🚀 | note:", note)
                     return <Link
                       key={note.id}
                       href={`/patients/${note.patient.id}/notes/${note.id}`}
